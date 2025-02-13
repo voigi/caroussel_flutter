@@ -100,7 +100,8 @@ Widget build(BuildContext context) {
       ],
     ),
     width: widget.selectValue == 1 ? MediaQuery.of(context).size.width * 0.9 : 250,
-    height: widget.selectValue == 1 ? 200 : 200,
+    height: widget.selectValue == 1 ? 
+MediaQuery.of(context).size.height * 0.8: 250,
     child: Stack(
       children: [
         Center(
