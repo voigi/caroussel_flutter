@@ -1,32 +1,32 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:developer';
 
-
 class MediaUploader extends StatefulWidget {
-
-  //1. creation des callbacks
+  final GlobalKey<ScaffoldState> scaffoldKey;
   final void Function(List<String> imagePath) imageContainerCallback;
   final void Function(int) selectValueCallback;
   final void Function(int) autoScrollValueCallback;
-  //final void Function(String name) nameCallback; 
-  //2. Ajout des callbacks dans le constructeur
-  const MediaUploader({super.key, required this.imageContainerCallback, required this.selectValueCallback,required,required this.autoScrollValueCallback});
+
+  const MediaUploader({
+    super.key,
+    required this.imageContainerCallback,
+    required this.selectValueCallback,
+    required this.autoScrollValueCallback,
+    required this.scaffoldKey,
+  });
 
   @override
   State<MediaUploader> createState() => _MediaUploaderState();
 }
 
 class _MediaUploaderState extends State<MediaUploader> {
-  
   String? _selectedFile; // Stocke le fichier sélectionné
   final _formKey = GlobalKey<FormState>();
-  int? selectValue ;
+  int? selectValue;
   int? autoScrollValue;
 
-// Valeur par défaut pour le Dropdown
+  // Liste pour stocker les images sélectionnées
   List<String> selectedImages = [];
 
   Future<void> pickFile() async {
@@ -35,41 +35,29 @@ class _MediaUploaderState extends State<MediaUploader> {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.any,
         allowMultiple: false,
-         // Permet tous les types de fichiers
       );
 
       if (result != null) {
-        // Récupérer le nom du fichier
-       String? fileName = result.files.single.name;
+        String? fileName = result.files.single.name;
+        log(fileName);
 
-      log(fileName);
-        // Récupérer l'extension du fichier
+        String extension = fileName.substring(fileName.lastIndexOf('.')); // Inclut le point (.)
 
-
-        
-       String extension = fileName.substring(fileName.lastIndexOf('.')); // Inclut le point (.)
-
-       // Vérifier si le nom du fichier est trop long
+        // Tronquer le nom du fichier si nécessaire
         if (fileName.length > 20) {
-          // Tronquer le nom du fichier tout en gardant l'extension
           fileName = '${fileName.substring(0, 10)} ...$extension';
         }
 
-       // Mettre à jour le texte avec le nom du fichier sélectionné
         setState(() {
           _selectedFile = 'fichier sélectionné: $fileName';
           selectedImages.add(result.files.single.path!);
-         // log('selectedImages: $selectedImages');
         });
+
         List<String> imagePath = selectedImages;
-        //3. Appel des callbacks
-        widget.imageContainerCallback(imagePath );
-       // widget.nameCallback(fileName.substring(0, fileName.lastIndexOf('.')));
+        widget.imageContainerCallback(imagePath);
       } else {
         setState(() {
-           
           _selectedFile = 'Aucun fichier sélectionné.';
-          
         });
       }
     } catch (e) {
@@ -87,28 +75,30 @@ class _MediaUploaderState extends State<MediaUploader> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-         
           Row(
             children: [
               Icon(Icons.looks_one, color: Colors.green),
-              Text(
-                'Choisir un Fichier',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+                Text(
+  'Choisir un Fichier',
+  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.blue),
+),
+SizedBox(height: 50.0)
             ],
           ),
-          ElevatedButton(
+          ElevatedButton.icon(
             onPressed: pickFile,
             style: ElevatedButton.styleFrom(
-              minimumSize: Size(double.infinity, 50), // Largeur infinie, hauteur 50
+              minimumSize: Size(double.infinity, 50),
               backgroundColor: Colors.blue,
             ),
-            child: Text(
+            icon:Icon(Icons.upload_file, color: Colors.white),
+            label: Text(
               'Choisir un fichier'.toUpperCase(),
               style: TextStyle(color: Colors.white),
             ),
-          ),
-          const SizedBox(height: 20),
+            
+          ),Text('Formats supportés : JPG, PNG', style: TextStyle(color: Colors.white)),
+         // const SizedBox(height: 20),
           Row(
             children: [
               _selectedFile != null
@@ -117,40 +107,45 @@ class _MediaUploaderState extends State<MediaUploader> {
                         children: [
                           TextSpan(
                             text: _selectedFile!.substring(0, _selectedFile!.lastIndexOf('.')),
-                            style: TextStyle(color: Colors.black), // Style normal pour le nom du fichier
+                            style: TextStyle(color: Colors.black),
                           ),
                           TextSpan(
                             text: _selectedFile!.substring(_selectedFile!.lastIndexOf('.')),
-                            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold), // Styliser l'extension
+                            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
                     )
-                  : Text('Aucun fichier sélectionné.'),
+                  : Container(
+                    margin: const EdgeInsets.only(left:20.0),
+                    child: Text('Aucun fichier sélectionné.'),
+                  ),
               SizedBox(width: 5),
             ],
           ),
-           Row(
-             children: [
-                Icon(Icons.looks_two, color: Colors.green),
-               const Text(
-                ' Choisir un Format',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                         ),
-             ],
-           ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Icon(Icons.looks_two, color: Colors.green),
+                 Text(
+  'Choisir un Format',
+  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.blue),
+),
+            ],
+          ),
           const SizedBox(height: 10),
           DropdownButtonFormField<int>(
             dropdownColor: Colors.white,
-            hint: Text('Image ou Carré ?',
-            style: _selectedFile == null ? TextStyle(color:Colors.grey):TextStyle(color: Colors.black)),
+            hint: Text(
+              'Image ou Carré ?',
+              style: _selectedFile == null ? TextStyle(color: Colors.grey) : TextStyle(color: Colors.black),
+            ),
             decoration: const InputDecoration(
               labelText: 'Format (e.g. Image, Carré)',
               border: OutlineInputBorder(
-                  borderSide:
-                      BorderSide(color: Color.fromRGBO(13, 71, 161, 1))),
+                  borderSide: BorderSide(color: Color.fromRGBO(13, 71, 161, 1))),
             ),
-            value: selectValue, // Valeur initiale
+            value: selectValue,
             items: const [
               DropdownMenuItem(
                 value: 1,
@@ -161,57 +156,55 @@ class _MediaUploaderState extends State<MediaUploader> {
                 child: Text('Carré'),
               ),
             ],
-            
-            onChanged:  _selectedFile == null ? null : (value) {
-              
-              setState(() {
-                selectValue = value;
-                widget.selectValueCallback(value!); 
-              }
-             
-              );
-            },
-            
-           
+            onChanged: _selectedFile == null
+                ? null
+                : (value) {
+                    setState(() {
+                      selectValue = value;
+                      widget.selectValueCallback(value!);
+                    });
+                  },
           ),
           const SizedBox(height: 20),
           Row(
-          children: [
-    Row(
-      children: [
-        Icon(Icons.looks_3, color: Colors.green),
-        Text(
-          ' Défilement Oui/Non',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-      ],
-    ),
-    SizedBox(width: 30),
-    Icon(
-      autoScrollValue == 1 
-          ? Icons.check_circle 
-          : autoScrollValue == 2 
-            ? Icons.cancel 
-            : Icons.circle, // Icône par défaut quand null
-      color: autoScrollValue == 1
-          ? Colors.green
-          : autoScrollValue == 2
-            ? Colors.red
-            : Colors.transparent, // Transparent si null
-    ),
-  ],
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.looks_3, color: Colors.green),
+                  Text(
+  'Défilement Automatique',
+  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.blue),
+),
+                ],
+              ),
+              SizedBox(width: 30),
+              Icon(
+                autoScrollValue == 1
+                    ? Icons.check_circle
+                    : autoScrollValue == 2
+                        ? Icons.cancel
+                        : Icons.circle,
+                color: autoScrollValue == 1
+                    ? Colors.green
+                    : autoScrollValue == 2
+                        ? Colors.red
+                        : Colors.transparent,
+              ),
+            ],
           ),
           const SizedBox(height: 5),
           DropdownButtonFormField<int>(
             dropdownColor: Colors.white,
-            hint: Text('Défilement automatique ?',
-            style: _selectedFile == null ? TextStyle(color:Colors.grey):TextStyle(color: Colors.black)),
+            hint: Text(
+              'Défilement automatique ?',
+              style: _selectedFile == null ? TextStyle(color: Colors.grey) : TextStyle(color: Colors.black),
+            ),
             decoration: const InputDecoration(
-             labelText: 'Défilement automatique Oui/Non',
+              labelText: 'Défilement automatique Oui/Non',
               border: OutlineInputBorder(
                   borderSide: BorderSide(color: Color.fromRGBO(13, 71, 161, 1))),
             ),
-           value:autoScrollValue, // Valeur initiale
+            value: autoScrollValue,
             items: const [
               DropdownMenuItem(
                 value: 1,
@@ -222,16 +215,36 @@ class _MediaUploaderState extends State<MediaUploader> {
                 child: Text('Non'),
               ),
             ],
-            onChanged:  _selectedFile == null || selectValue ==  null? null : (value) {
-              setState(() {
-              /*si la valeur est 1 alors on active le défilement automatique sinon on le désactive
-              l'idée est de récupérer le contenu de la liste selectImages et de faire défiler son contenu ds le carousel
-              */
-                autoScrollValue = value;
-                widget.autoScrollValueCallback(value!);
+            onChanged: _selectedFile == null || selectValue == null
+                ? null
+                : (value) {
+                    setState(() {
+                      autoScrollValue = value;
+                      widget.autoScrollValueCallback(value!);
+                    });
+                  },
+          ),
+          SizedBox(height: 20),
+          ElevatedButton(
+             style: _selectedFile!=null && selectValue!=null && autoScrollValue!=null? ElevatedButton.styleFrom(
+              minimumSize: Size(double.infinity, 50),
+              backgroundColor: Colors.green,
+            ):ElevatedButton.styleFrom(
+              minimumSize: Size(double.infinity, 50),
+              backgroundColor: Colors.grey,
+            ),
+            onPressed: () {
+              // Ouvre le Drawer en utilisant la clé passée depuis main.dart
+              
+              Future.delayed(Duration(milliseconds: 100), () {
+                if (widget.scaffoldKey.currentState != null &&_selectedFile != null && selectValue !=null && autoScrollValue !=null)  {
+                  widget.scaffoldKey.currentState!.openEndDrawer();
+                }
               });
             },
-          )
+            child: Text('Valider', style: selectValue ==null && autoScrollValue == null? TextStyle(color: Colors.grey[600])
+            :TextStyle(color: Colors.white)),
+          ),
         ],
       ),
     );

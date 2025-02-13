@@ -100,7 +100,7 @@ Widget build(BuildContext context) {
       ],
     ),
     width: widget.selectValue == 1 ? MediaQuery.of(context).size.width * 0.9 : 250,
-    height: widget.selectValue == 1 ? 250 : 250,
+    height: widget.selectValue == 1 ? 200 : 200,
     child: Stack(
       children: [
         Center(
@@ -115,7 +115,7 @@ Widget build(BuildContext context) {
           ),
         ),
         // Si autoScrollValue == 2, on affiche les icônes normales
-        if (widget.autoScrollValue == 2) ...[
+        if (widget.autoScrollValue == 2 || widget.imagePath.isNotEmpty) ...[
           Positioned(
             right: 2,
             child: IconButton(

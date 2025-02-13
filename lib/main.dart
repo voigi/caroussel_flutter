@@ -57,12 +57,7 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  void _openSettings(){
 
-    setState(() {
-      _scaffoldKey.currentState?.openEndDrawer();
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,23 +69,12 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           backgroundColor: Colors.cyan[700],
           title: Center(child: Text('Mon Carrousel', style: TextStyle(color: Colors.white))),
-          actions: [
-            IconButton(icon:Icon(Icons.settings) , onPressed: (
-
-              
-
-            ){_openSettings();
-            
-            //ouvre un drawer à droite
-           
-              
-            },)
-          ],
+          actions: [IconButton(onPressed: null, icon: Icon(Icons.search, color: Colors.transparent))],
         ),
-       
+        
          endDrawer: MyDrawer(),
-         endDrawerEnableOpenDragGesture:false,
-         drawerEdgeDragWidth:50.0,
+         endDrawerEnableOpenDragGesture: false,
+        
         
         
         body: Column(
@@ -137,6 +121,7 @@ class _MyAppState extends State<MyApp> {
                         ),
                         //4. Ajouter le callback pour le nom ds le widget MediaUploader
                         MediaUploader(
+                          scaffoldKey: _scaffoldKey,
                           imageContainerCallback: _imageContainer,
                           selectValueCallback: _selectedValue,
                           autoScrollValueCallback: autoScrollValue,
