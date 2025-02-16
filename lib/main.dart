@@ -26,7 +26,7 @@ class _MyAppState extends State<MyApp> {
   bool _isContainerVisible = false;
   List<String>? _imagePath;
   List<String> _imageNames = []; // Liste pour les noms des images
-  int? _selectValue = 1;
+  //int? _selectValue = 1;
   int? _autoScrollValue;
 
   // Modifie cette méthode pour gérer à la fois les images et leurs noms
@@ -40,7 +40,7 @@ class _MyAppState extends State<MyApp> {
 
   void _selectedValue(int selectValue) {
     setState(() {
-      _selectValue = selectValue;
+     // _selectValue = selectValue;
     });
   }
 
@@ -72,7 +72,10 @@ class _MyAppState extends State<MyApp> {
           actions: [IconButton(onPressed: null, icon: Icon(Icons.search, color: Colors.transparent))],
         ),
         
-         endDrawer: MyDrawer(),
+         endDrawer: Container(
+            width: MediaQuery.of(context).size.width * 0.8,
+          child: MyDrawer()
+          ),
          endDrawerEnableOpenDragGesture: false,
         
         
@@ -86,7 +89,7 @@ class _MyAppState extends State<MyApp> {
             if (_isContainerVisible)
               Carrousel(
                 imagePath: _imagePath!,
-                selectValue: _selectValue,
+                //selectValue: _selectValue,
                 autoScrollValue: _autoScrollValue,
                // imageNames: _imageNames,
               ),

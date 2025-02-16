@@ -41,7 +41,8 @@ class _MediaUploaderState extends State<MediaUploader> {
         String? fileName = result.files.single.name;
         log(fileName);
 
-        String extension = fileName.substring(fileName.lastIndexOf('.')); // Inclut le point (.)
+        String extension = fileName
+            .substring(fileName.lastIndexOf('.')); // Inclut le point (.)
 
         // Tronquer le nom du fichier si nécessaire
         if (fileName.length > 20) {
@@ -78,11 +79,14 @@ class _MediaUploaderState extends State<MediaUploader> {
           Row(
             children: [
               Icon(Icons.looks_one, color: Colors.green),
-                Text(
-  'Choisir un Fichier',
-  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.blue),
-),
-SizedBox(height: 50.0)
+              Text(
+                'Choisir un Fichier',
+                style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue),
+              ),
+              SizedBox(height: 50.0)
             ],
           ),
           ElevatedButton.icon(
@@ -91,14 +95,16 @@ SizedBox(height: 50.0)
               minimumSize: Size(double.infinity, 50),
               backgroundColor: Colors.blue,
             ),
-            icon:Icon(Icons.upload_file, color: Colors.white),
+            icon: Icon(Icons.upload_file, color: Colors.white),
             label: Text(
               'Choisir un fichier'.toUpperCase(),
               style: TextStyle(color: Colors.white),
             ),
-            
-          ),Text('Formats supportés : JPG, PNG', style: TextStyle(color: Colors.white)),
-         // const SizedBox(height: 20),
+          ),
+          Text('Formats supportés : JPG, PNG',
+              style: TextStyle(color: Colors.white)),
+          // const SizedBox(height: 20),
+         
           Row(
             children: [
               _selectedFile != null
@@ -106,75 +112,43 @@ SizedBox(height: 50.0)
                       text: TextSpan(
                         children: [
                           TextSpan(
-                            text: _selectedFile!.substring(0, _selectedFile!.lastIndexOf('.')),
+                            text: _selectedFile!
+                                .substring(0, _selectedFile!.lastIndexOf('.')),
                             style: TextStyle(color: Colors.black),
                           ),
                           TextSpan(
-                            text: _selectedFile!.substring(_selectedFile!.lastIndexOf('.')),
-                            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                            text: _selectedFile!
+                                .substring(_selectedFile!.lastIndexOf('.')),
+                            style: TextStyle(
+                                color: Colors.red, fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
                     )
                   : Container(
-                    margin: const EdgeInsets.only(left:20.0),
-                    child: Text('Aucun fichier sélectionné.'),
-                  ),
-              SizedBox(width: 5),
+                      margin: const EdgeInsets.only(left: 20.0),
+                      child: Text('Aucun fichier sélectionné.'),  
+                    ),
+                    
+              
+              
             ],
           ),
           const SizedBox(height: 20),
-          Row(
-            children: [
-              Icon(Icons.looks_two, color: Colors.green),
-                 Text(
-  'Choisir un Format',
-  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.blue),
-),
-            ],
-          ),
-          const SizedBox(height: 10),
-          DropdownButtonFormField<int>(
-            dropdownColor: Colors.white,
-            hint: Text(
-              'Image ou Carré ?',
-              style: _selectedFile == null ? TextStyle(color: Colors.grey) : TextStyle(color: Colors.black),
-            ),
-            decoration: const InputDecoration(
-              labelText: 'Format (e.g. Image, Carré)',
-              border: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color.fromRGBO(13, 71, 161, 1))),
-            ),
-            value: selectValue,
-            items: const [
-              DropdownMenuItem(
-                value: 1,
-                child: Text('Image'),
-              ),
-              DropdownMenuItem(
-                value: 2,
-                child: Text('Carré'),
-              ),
-            ],
-            onChanged: _selectedFile == null
-                ? null
-                : (value) {
-                    setState(() {
-                      selectValue = value;
-                      widget.selectValueCallback(value!);
-                    });
-                  },
-          ),
-          const SizedBox(height: 20),
+        
+          
           Row(
             children: [
               Row(
                 children: [
-                  Icon(Icons.looks_3, color: Colors.green),
+                  Icon(Icons.looks_two, color: Colors.green),
                   Text(
-  'Défilement Automatique',
-  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.blue),
-),
+                    'Défilement Automatique',
+                    style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue),
+                  ),
                 ],
               ),
               SizedBox(width: 30),
@@ -197,12 +171,15 @@ SizedBox(height: 50.0)
             dropdownColor: Colors.white,
             hint: Text(
               'Défilement automatique ?',
-              style: _selectedFile == null ? TextStyle(color: Colors.grey) : TextStyle(color: Colors.black),
+              style: _selectedFile == null
+                  ? TextStyle(color: Colors.grey)
+                  : TextStyle(color: Colors.black),
             ),
             decoration: const InputDecoration(
               labelText: 'Défilement automatique Oui/Non',
               border: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color.fromRGBO(13, 71, 161, 1))),
+                  borderSide:
+                      BorderSide(color: Color.fromRGBO(13, 71, 161, 1))),
             ),
             value: autoScrollValue,
             items: const [
@@ -215,7 +192,7 @@ SizedBox(height: 50.0)
                 child: Text('Non'),
               ),
             ],
-            onChanged: _selectedFile == null || selectValue == null
+            onChanged: _selectedFile == null 
                 ? null
                 : (value) {
                     setState(() {
@@ -226,24 +203,31 @@ SizedBox(height: 50.0)
           ),
           SizedBox(height: 20),
           ElevatedButton(
-             style: _selectedFile!=null && selectValue!=null && autoScrollValue!=null? ElevatedButton.styleFrom(
-              minimumSize: Size(double.infinity, 50),
-              backgroundColor: Colors.green,
-            ):ElevatedButton.styleFrom(
-              minimumSize: Size(double.infinity, 50),
-              backgroundColor: Colors.grey,
-            ),
+            style: _selectedFile != null &&
+                    autoScrollValue != null
+                ? ElevatedButton.styleFrom(
+                    minimumSize: Size(double.infinity, 50),
+                    backgroundColor: Colors.green,
+                  )
+                : ElevatedButton.styleFrom(
+                    minimumSize: Size(double.infinity, 50),
+                    backgroundColor: Colors.grey,
+                  ),
             onPressed: () {
               // Ouvre le Drawer en utilisant la clé passée depuis main.dart
-              
+
               Future.delayed(Duration(milliseconds: 100), () {
-                if (widget.scaffoldKey.currentState != null &&_selectedFile != null && selectValue !=null && autoScrollValue !=null)  {
+                if (widget.scaffoldKey.currentState != null &&
+                    _selectedFile != null &&
+                    autoScrollValue != null) {
                   widget.scaffoldKey.currentState!.openEndDrawer();
                 }
               });
             },
-            child: Text('Valider', style: selectValue ==null && autoScrollValue == null? TextStyle(color: Colors.grey[600])
-            :TextStyle(color: Colors.white)),
+            child: Text('Valider',
+                style: autoScrollValue == null
+                    ? TextStyle(color: Colors.grey[600])
+                    : TextStyle(color: Colors.white)),
           ),
         ],
       ),
