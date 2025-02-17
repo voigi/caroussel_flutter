@@ -33,7 +33,7 @@ class _MediaUploaderState extends State<MediaUploader> {
     try {
       // Sélectionner un fichier
       FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.any,
+        type: FileType.image,
         allowMultiple: false,
       );
 
@@ -86,54 +86,37 @@ class _MediaUploaderState extends State<MediaUploader> {
                     fontWeight: FontWeight.bold,
                     color: Colors.blue),
               ),
-              SizedBox(height: 50.0)
+              
             ],
           ),
-          ElevatedButton.icon(
-            onPressed: pickFile,
-            style: ElevatedButton.styleFrom(
-              minimumSize: Size(double.infinity, 50),
-              backgroundColor: Colors.blue,
+         SizedBox(height: 10),
+          Tooltip(
+         message: 'Cliquez pour choisir un fichier',
+            preferBelow: true,
+            margin: EdgeInsets.all(8),
+            textStyle: TextStyle(color: Colors.white),
+            decoration: BoxDecoration(
+              color: const Color.fromARGB(255, 194, 199, 204),
+              borderRadius: BorderRadius.circular(8),
             ),
-            icon: Icon(Icons.upload_file, color: Colors.white),
-            label: Text(
-              'Choisir un fichier'.toUpperCase(),
-              style: TextStyle(color: Colors.white),
+            child: ElevatedButton.icon(
+              onPressed: pickFile,
+              style: ElevatedButton.styleFrom(
+                minimumSize: Size(double.infinity, 50),
+                backgroundColor: Colors.blue,
+              ),
+              icon: Icon(Icons.upload_file, color: Colors.white),
+              label: Text(
+                'Choisir un fichier'.toUpperCase(),
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ),
           Text('Formats supportés : JPG, PNG',
               style: TextStyle(color: Colors.white)),
           // const SizedBox(height: 20),
          
-          Row(
-            children: [
-              _selectedFile != null
-                  ? RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: _selectedFile!
-                                .substring(0, _selectedFile!.lastIndexOf('.')),
-                            style: TextStyle(color: Colors.black),
-                          ),
-                          TextSpan(
-                            text: _selectedFile!
-                                .substring(_selectedFile!.lastIndexOf('.')),
-                            style: TextStyle(
-                                color: Colors.red, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    )
-                  : Container(
-                      margin: const EdgeInsets.only(left: 20.0),
-                      child: Text('Aucun fichier sélectionné.'),  
-                    ),
-                    
-              
-              
-            ],
-          ),
+        
           const SizedBox(height: 20),
         
           
@@ -202,32 +185,46 @@ class _MediaUploaderState extends State<MediaUploader> {
                   },
           ),
           SizedBox(height: 20),
-          ElevatedButton(
-            style: _selectedFile != null &&
-                    autoScrollValue != null
-                ? ElevatedButton.styleFrom(
-                    minimumSize: Size(double.infinity, 50),
-                    backgroundColor: Colors.green,
-                  )
-                : ElevatedButton.styleFrom(
-                    minimumSize: Size(double.infinity, 50),
-                    backgroundColor: Colors.grey,
-                  ),
-            onPressed: () {
-              // Ouvre le Drawer en utilisant la clé passée depuis main.dart
-
-              Future.delayed(Duration(milliseconds: 100), () {
-                if (widget.scaffoldKey.currentState != null &&
-                    _selectedFile != null &&
-                    autoScrollValue != null) {
-                  widget.scaffoldKey.currentState!.openEndDrawer();
-                }
-              });
-            },
-            child: Text('Valider',
-                style: autoScrollValue == null
-                    ? TextStyle(color: Colors.grey[600])
-                    : TextStyle(color: Colors.white)),
+          Tooltip(
+            message:  _selectedFile != null && autoScrollValue != null
+                ? 'Cliquez pour valider'
+                : 'Veuillez sélectionner un fichier et une option',
+            preferBelow: true,
+            margin: EdgeInsets.all(13),
+            textStyle: TextStyle(color: Colors.white),
+            decoration: BoxDecoration(
+              color: _selectedFile != null && autoScrollValue != null
+                  ? Colors.blue
+                  : Colors.grey,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: ElevatedButton(
+              style: _selectedFile != null &&
+                      autoScrollValue != null
+                  ? ElevatedButton.styleFrom(
+                      minimumSize: Size(double.infinity, 50),
+                      backgroundColor: Colors.green,
+                    )
+                  : ElevatedButton.styleFrom(
+                      minimumSize: Size(double.infinity, 50),
+                      backgroundColor: Colors.grey,
+                    ),
+              onPressed: () {
+                // Ouvre le Drawer en utilisant la clé passée depuis main.dart
+            
+                Future.delayed(Duration(milliseconds: 100), () {
+                  if (widget.scaffoldKey.currentState != null &&
+                      _selectedFile != null &&
+                      autoScrollValue != null) {
+                    widget.scaffoldKey.currentState!.openEndDrawer();
+                  }
+                });
+              },
+              child: Text('Valider',
+                  style: autoScrollValue == null
+                      ? TextStyle(color: Colors.grey[600])
+                      : TextStyle(color: Colors.white)),
+            ),
           ),
         ],
       ),
