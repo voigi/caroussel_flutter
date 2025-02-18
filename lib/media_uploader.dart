@@ -7,6 +7,7 @@ class MediaUploader extends StatefulWidget {
   final void Function(List<String> imagePath) imageContainerCallback;
   final void Function(int) selectValueCallback;
   final void Function(int) autoScrollValueCallback;
+  final List <String> imagePath;
 
   const MediaUploader({
     super.key,
@@ -14,6 +15,7 @@ class MediaUploader extends StatefulWidget {
     required this.selectValueCallback,
     required this.autoScrollValueCallback,
     required this.scaffoldKey,
+    required this .imagePath,
   });
 
   @override
@@ -21,6 +23,7 @@ class MediaUploader extends StatefulWidget {
 }
 
 class _MediaUploaderState extends State<MediaUploader> {
+  
   String? _selectedFile; // Stocke le fichier sélectionné
   final _formKey = GlobalKey<FormState>();
   int? selectValue;
@@ -69,8 +72,23 @@ class _MediaUploaderState extends State<MediaUploader> {
     }
   }
 
+ 
+
   @override
   Widget build(BuildContext context) {
+    
+   
+   log('images:$selectedImages');
+
+    if (widget.imagePath.isEmpty && autoScrollValue != null) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() {
+        autoScrollValue = null;
+        
+        
+      });
+    });
+  }
     return Form(
       key: _formKey,
       child: Column(
@@ -153,8 +171,9 @@ class _MediaUploaderState extends State<MediaUploader> {
           DropdownButtonFormField<int>(
             dropdownColor: Colors.white,
             hint: Text(
+              
               'Défilement automatique ?',
-              style: _selectedFile == null
+              style: _selectedFile == null || widget.imagePath.isEmpty
                   ? TextStyle(color: Colors.grey)
                   : TextStyle(color: Colors.black),
             ),
@@ -175,7 +194,7 @@ class _MediaUploaderState extends State<MediaUploader> {
                 child: Text('Non'),
               ),
             ],
-            onChanged: _selectedFile == null 
+            onChanged: _selectedFile == null || selectedImages.isEmpty 
                 ? null
                 : (value) {
                     setState(() {

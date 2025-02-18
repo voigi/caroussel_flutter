@@ -125,6 +125,7 @@ class _MyAppState extends State<MyApp> {
                         //4. Ajouter le callback pour le nom ds le widget MediaUploader
                         MediaUploader(
                           scaffoldKey: _scaffoldKey,
+                          imagePath: [],
                           imageContainerCallback: _imageContainer,
                           selectValueCallback: _selectedValue,
                           autoScrollValueCallback: autoScrollValue,

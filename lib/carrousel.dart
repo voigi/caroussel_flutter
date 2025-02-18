@@ -1,14 +1,17 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:developer';
+//import 'package:caroussel/main.dart';
 import 'package:flutter/material.dart';
 import 'package:caroussel/edit_modal.dart';
+
 
 class Carrousel extends StatefulWidget {
   final List<String> imagePath;
   //final int? selectValue;
-  final int? autoScrollValue;
-
+   final int? autoScrollValue ;
+  
+//final Function(int?) onAutoScrollChanged;
   //final List String name;
 
   const Carrousel(
@@ -25,10 +28,12 @@ class Carrousel extends StatefulWidget {
 class _CarrouselState extends State<Carrousel> {
   int currentIndex = 0;
   Timer? timer;
+  int? localAutoScrollValue;
 
   @override
   void initState() {
     super.initState();
+    localAutoScrollValue = widget.autoScrollValue; // Initialisation de la valeur
     autoScroll(); // Appel au démarrage du widget
   }
 
@@ -59,9 +64,19 @@ class _CarrouselState extends State<Carrousel> {
   //Fonction pour supprimmer une image
   void deleteImage() {
     if (widget.autoScrollValue == 2 || widget.imagePath.isNotEmpty) {
-      setState(() {
-        widget.imagePath.removeAt(currentIndex);
-      });
+      if (widget.imagePath.isNotEmpty &&
+          currentIndex >= 0 &&
+          currentIndex < widget.imagePath.length) {
+        setState(() {
+          widget.imagePath.removeAt(currentIndex);
+
+          // S'assurer que l'index reste valide après suppression
+          if (currentIndex >= widget.imagePath.length) {
+            currentIndex =
+                widget.imagePath.isNotEmpty ? widget.imagePath.length - 1 : 0;
+          }
+        });
+      }
     }
   }
 
@@ -98,6 +113,18 @@ class _CarrouselState extends State<Carrousel> {
     // log('selectValue: ${widget.selectValue}');
     log('autoScrollValue: ${widget.autoScrollValue}');
     log('Chemin de l\'image: ${widget.imagePath}');
+
+    if (widget.imagePath.isEmpty) {
+      // setState(() {
+      //   widget.onAutoScrollChanged(null);
+      // });
+      setState(() {
+        localAutoScrollValue = null; // On met localAutoScrollValue à null
+      });
+    
+      return SizedBox.shrink();
+       
+    }
 
     return Container(
       margin: EdgeInsets.only(bottom: 20.0),
@@ -144,11 +171,13 @@ class _CarrouselState extends State<Carrousel> {
                 color: Colors.transparent,
               ),
             ),
-          ]else ...[
-   Positioned(
+          ] else ...[
+            Positioned(
               right: 2,
               child: IconButton(
-                onPressed: () async  {await editModal(context);},
+                onPressed: () async {
+                  await editModal(context);
+                },
                 icon: Icon(Icons.edit, size: 35.0),
               ),
             ),
@@ -181,7 +210,6 @@ class _CarrouselState extends State<Carrousel> {
                 ),
               ),
             )
-
           ],
           // if (widget.autoScrollValue == 2 || widget.imagePath.isNotEmpty) ...[
           //   Positioned(
