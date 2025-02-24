@@ -3,6 +3,7 @@ import 'package:caroussel/media_uploader.dart';
 import 'package:flutter/services.dart';
 import 'package:caroussel/carrousel.dart';
 import 'package:caroussel/drawer.dart';
+import 'dart:developer';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,10 +58,17 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-
+void updateImageLength(int longueurlenght) {
+  setState(() {
+    var longueurPath = _imagePath?.length;
+    log('images: $longueurPath'); // Vérifier la nouvelle valeur
+  });
+}
+ 
 
   @override
   Widget build(BuildContext context) {
+     
     return MaterialApp(
       home: Scaffold(
       
@@ -89,6 +97,7 @@ class _MyAppState extends State<MyApp> {
             if (_isContainerVisible)
               Carrousel(
                 imagePath: _imagePath!,
+                updateImageLengthCallback: updateImageLength,
                 //selectValue: _selectValue,
                 autoScrollValue: _autoScrollValue,
                // imageNames: _imageNames,
@@ -129,6 +138,7 @@ class _MyAppState extends State<MyApp> {
                           imageContainerCallback: _imageContainer,
                           selectValueCallback: _selectedValue,
                           autoScrollValueCallback: autoScrollValue,
+                          
                          // nameCallback: name, // Passer le callback pour les noms d'images
                         ),
                       ],

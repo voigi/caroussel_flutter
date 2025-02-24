@@ -10,6 +10,8 @@ class Carrousel extends StatefulWidget {
   final List<String> imagePath;
   //final int? selectValue;
    final int? autoScrollValue ;
+   final Function updateImageLengthCallback;
+   //final VoidCallback onImageDeleted;
   
 //final Function(int?) onAutoScrollChanged;
   //final List String name;
@@ -17,6 +19,8 @@ class Carrousel extends StatefulWidget {
   const Carrousel(
       {Key? key,
       required this.imagePath,
+      required this .updateImageLengthCallback,
+     // required this.onImageDeleted,
       //required this.selectValue,
       required this.autoScrollValue})
       : super(key: key);
@@ -75,6 +79,9 @@ class _CarrouselState extends State<Carrousel> {
             currentIndex =
                 widget.imagePath.isNotEmpty ? widget.imagePath.length - 1 : 0;
           }
+          //faire passer la nouvelle valeur de widget.imagepath.lenght à mediauploader.dart
+           // Appeler la fonction pour informer mediaUploader.dart
+        widget.updateImageLengthCallback(widget.imagePath.length);
         });
       }
     }

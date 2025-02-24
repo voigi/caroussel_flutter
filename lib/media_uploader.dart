@@ -7,11 +7,13 @@ class MediaUploader extends StatefulWidget {
   final void Function(List<String> imagePath) imageContainerCallback;
   final void Function(int) selectValueCallback;
   final void Function(int) autoScrollValueCallback;
+  //final Function updateImageLengthCallback;
   final List <String> imagePath;
 
   const MediaUploader({
     super.key,
     required this.imageContainerCallback,
+   // required this .updateImageLengthCallback,
     required this.selectValueCallback,
     required this.autoScrollValueCallback,
     required this.scaffoldKey,
@@ -72,23 +74,30 @@ class _MediaUploaderState extends State<MediaUploader> {
     }
   }
 
- 
+//  void updateImageLength() {
+//   setState(() {
+//    var longueurPath = selectedImages.length;
+//     log('images: $longueurPath'); // Vérifier la nouvelle valeur
+//   });
+// }
+
+
+
 
   @override
   Widget build(BuildContext context) {
     
-   
-   log('images:$selectedImages');
 
-    if (widget.imagePath.isEmpty && autoScrollValue != null) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      setState(() {
-        autoScrollValue = null;
+
+  //   if (widget.imagePath.isEmpty && autoScrollValue != null) {
+  //   WidgetsBinding.instance.addPostFrameCallback((_) {
+  //     setState(() {
+  //       autoScrollValue = null;
         
         
-      });
-    });
-  }
+  //     });
+  //   });
+  // }
     return Form(
       key: _formKey,
       child: Column(
@@ -154,14 +163,14 @@ class _MediaUploaderState extends State<MediaUploader> {
               ),
               SizedBox(width: 30),
               Icon(
-                autoScrollValue == 1
+                autoScrollValue == 1 && selectedImages.length > 1
                     ? Icons.check_circle
-                    : autoScrollValue == 2
+                    : autoScrollValue == 2 && selectedImages.length > 1
                         ? Icons.cancel
                         : Icons.circle,
-                color: autoScrollValue == 1
+                color: autoScrollValue == 1 && selectedImages.length > 1
                     ? Colors.green
-                    : autoScrollValue == 2
+                    : autoScrollValue == 2 && selectedImages.length > 1
                         ? Colors.red
                         : Colors.transparent,
               ),
@@ -173,7 +182,7 @@ class _MediaUploaderState extends State<MediaUploader> {
             hint: Text(
               
               'Défilement automatique ?',
-              style: _selectedFile == null || widget.imagePath.isEmpty
+              style: _selectedFile == null || widget.imagePath.isEmpty || selectedImages.length <= 1
                   ? TextStyle(color: Colors.grey)
                   : TextStyle(color: Colors.black),
             ),
@@ -184,17 +193,27 @@ class _MediaUploaderState extends State<MediaUploader> {
                       BorderSide(color: Color.fromRGBO(13, 71, 161, 1))),
             ),
             value: autoScrollValue,
-            items: const [
+            items: [
               DropdownMenuItem(
                 value: 1,
-                child: Text('Oui'),
+                child: Text(
+                  selectedImages.length <= 1
+        ? 'Défilement automatique ?'
+        : 
+                  'Oui'),
               ),
               DropdownMenuItem(
                 value: 2,
-                child: Text('Non'),
+                child: Text(
+                  selectedImages.length <= 1
+        ? 'Défilement automatique ?'
+        : 
+                  
+                  
+                  'Non'),
               ),
             ],
-            onChanged: _selectedFile == null || selectedImages.isEmpty 
+            onChanged: _selectedFile == null || selectedImages.isEmpty || selectedImages.length <= 1
                 ? null
                 : (value) {
                     setState(() {
@@ -219,7 +238,7 @@ class _MediaUploaderState extends State<MediaUploader> {
             ),
             child: ElevatedButton(
               style: _selectedFile != null &&
-                      autoScrollValue != null
+                      autoScrollValue != null &&  selectedImages.length > 1
                   ? ElevatedButton.styleFrom(
                       minimumSize: Size(double.infinity, 50),
                       backgroundColor: Colors.green,
