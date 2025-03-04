@@ -80,7 +80,7 @@ void updateImageLength(int longueurlenght) {
           actions: [IconButton(onPressed: null, icon: Icon(Icons.search, color: Colors.transparent))],
         ),
         
-         endDrawer: Container(
+         endDrawer: SizedBox(
             width: MediaQuery.of(context).size.width * 0.8,
           child: MyDrawer()
           ),
