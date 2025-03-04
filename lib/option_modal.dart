@@ -30,7 +30,8 @@ class _VideoPlayerModalState extends State<VideoPlayerModal> {
   double _totalDuration = 0.0;
   bool _isDragging = false;
   bool _isPlaying = false; // Pour gérer l'état du play/pause
-  bool _showPlayPause = false; // Pour gérer l'affichage du bouton Play/Pause
+  bool _showPlayPause = false; // Le bouton Play/Pause est caché par défaut
+  bool _initialized = false; // Pour savoir si la vidéo est prête
   Timer? _hidePlayPauseTimer; // Timer pour cacher l'icône Play/Pause
 
   @override
@@ -40,7 +41,11 @@ class _VideoPlayerModalState extends State<VideoPlayerModal> {
       ..setLooping(true)
       ..setVolume(1.0);
 
-    _initializeVideoPlayerFuture = _controller.initialize();
+    _initializeVideoPlayerFuture = _controller.initialize().then((_) {
+      setState(() {
+        _initialized = true; // Marquer la vidéo comme prête
+      });
+    });
 
     // Mettre à jour la position de la vidéo pendant sa lecture
     _controller.addListener(() {
@@ -119,6 +124,7 @@ class _VideoPlayerModalState extends State<VideoPlayerModal> {
             future: _initializeVideoPlayerFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.done) {
+                // La vidéo est prête à être lue, afficher l'interface vidéo
                 return Stack(
                   alignment: Alignment.center,
                   children: [
@@ -129,9 +135,9 @@ class _VideoPlayerModalState extends State<VideoPlayerModal> {
                         child: VideoPlayer(_controller),
                       ),
                     ),
-                    // Barre de progression
+                    // Barre de progression (en bas)
                     Positioned(
-                      bottom: 10,
+                      bottom: 2,
                       left: 20,
                       right: 20,
                       child: Slider(
@@ -153,8 +159,21 @@ class _VideoPlayerModalState extends State<VideoPlayerModal> {
                       ),
                     ),
                     // Afficher l'icône Play/Pause seulement si nécessaire
+                    if (_initialized && !_isPlaying && !_showPlayPause)
+                      Positioned(
+                        top: 20,
+                        child: IconButton(
+                          onPressed: _togglePlayPause,
+                          icon: Icon(
+                            Icons.play_circle_filled,
+                            color: Colors.white,
+                            size: 60, // Augmenter la taille du bouton pour une meilleure visibilité
+                          ),
+                        ),
+                      ),
                     if (_showPlayPause)
                       Positioned(
+                        top: 20,
                         child: IconButton(
                           onPressed: _togglePlayPause,
                           icon: Icon(
@@ -162,14 +181,17 @@ class _VideoPlayerModalState extends State<VideoPlayerModal> {
                                 ? Icons.pause_circle_filled
                                 : Icons.play_circle_filled,
                             color: Colors.white,
-                            size: 50,
+                            size: 60, // Augmenter la taille du bouton pour une meilleure visibilité
                           ),
                         ),
                       ),
                   ],
                 );
               } else {
-                return CircularProgressIndicator(); // En attendant que la vidéo soit prête
+                // Si la vidéo n'est pas encore prête, afficher un indicateur de chargement
+                return Center(
+                  child: CircularProgressIndicator(),
+                );
               }
             },
           ),
