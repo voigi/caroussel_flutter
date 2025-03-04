@@ -177,7 +177,7 @@ class _MyDrawerState extends State<MyDrawer> {
               onPressed: () {
                 // Fermer le drawer
                 Navigator.pop(context);
-                optionModal(context);
+                optionModal(context,'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4');
               },
               child: Text('Valider',
                   style: TextStyle(fontSize: 16, color: Colors.white)),
