@@ -1,7 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'dart:developer';
 
-Future<void> pickFile() async {
+Future<String?> pickFile() async {
   try {
     // Sélectionner un fichier
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -10,9 +10,12 @@ Future<void> pickFile() async {
     );
 
     if (result != null) {
-      String? fileName = result.files.single.name;
-      log(fileName);
+      //String? fileName = result.files.single.name;
+      String? filePath = result.files.single.path;
+      return filePath;
+     // log(fileName);
     }
+    return null;
   } catch (e) {
     print("Erreur lors de la sélection du fichier : $e");
   }

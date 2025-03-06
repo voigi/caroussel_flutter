@@ -41,6 +41,11 @@ class _CarrouselState extends State<Carrousel> {
     autoScroll(); // Appel au démarrage du widget
   }
 
+   void updateImageAtIndex(String newPath) {
+  setState(() {
+    widget.imagePath[currentIndex] = newPath;
+  });
+}
   // Fonction pour gérer le défilement automatique
   void autoScroll() {
     if (widget.autoScrollValue == 1) {
@@ -183,7 +188,7 @@ class _CarrouselState extends State<Carrousel> {
               right: 2,
               child: IconButton(
                 onPressed: () async {
-                  await editModal(context);
+                  await editModal(context,updateImageAtIndex);
                 },
                 icon: Icon(Icons.edit, size: 35.0),
               ),

@@ -2,7 +2,7 @@ import 'package:caroussel/upload_file.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer';
 
-Future<void> editModal(BuildContext context) {
+Future<void> editModal(BuildContext context,Function(String) updateImage) {
   return showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -20,7 +20,11 @@ Future<void> editModal(BuildContext context) {
               SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: () async {
-                  await pickFile();
+                  String? newPath = await pickFile();
+                if (newPath != null) {
+                  updateImage(newPath); // Met à jour l'image dans le carrousel
+                  Navigator.of(context).pop(); // Ferme la modal
+                }
                 },
                 style: ElevatedButton.styleFrom(
                   minimumSize: Size(double.infinity, 50),
