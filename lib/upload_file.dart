@@ -1,11 +1,11 @@
 import 'package:file_picker/file_picker.dart';
-import 'dart:developer';
 
 Future<String?> pickFile() async {
   try {
     // Sélectionner un fichier
     FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
+      type: FileType.media,
+      allowedExtensions: ['bmp', 'jpg', 'png', 'jpeg'],
       allowMultiple: false,
     );
 
@@ -19,4 +19,5 @@ Future<String?> pickFile() async {
   } catch (e) {
     print("Erreur lors de la sélection du fichier : $e");
   }
+  return null;
 }

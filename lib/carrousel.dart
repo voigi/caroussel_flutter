@@ -161,7 +161,7 @@ class _CarrouselState extends State<Carrousel> {
               borderRadius: BorderRadius.circular(20.0),
               child: Image.file(
                 File(widget.imagePath[currentIndex]),
-                fit: BoxFit.fitWidth,
+                fit: BoxFit.cover,
                 width: double.infinity,
                 height: double.infinity,
               ),
