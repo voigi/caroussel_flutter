@@ -1,8 +1,11 @@
+import 'package:caroussel/generate_video.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 //import 'dart:developer';
 import 'package:caroussel/option_modal.dart';
 import 'package:caroussel/test_api.dart';
+import 'carousel_provider.dart';
+import 'package:provider/provider.dart';
 
 class MyDrawer extends StatefulWidget {
   @override
@@ -51,6 +54,7 @@ class _MyDrawerState extends State<MyDrawer> {
 
   @override
   Widget build(BuildContext context) {
+     List<String> selectedImages = context.watch<CarouselProvider>().selectedImages;
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
@@ -174,11 +178,20 @@ class _MyDrawerState extends State<MyDrawer> {
                   borderRadius: BorderRadius.circular(10.0),
                 ),
               ),
-              onPressed: () {
-                // Fermer le drawer
-                Navigator.pop(context);
-                optionModal(context,'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4');
-              },
+            onPressed: () async {
+  // Fermer le drawer
+  Navigator.pop(context);
+  
+  // Générer la vidéo avec les images sélectionnées
+  String videoPath = await generateVideo(selectedImages);
+
+  // Si la vidéo a été générée avec succès, appeler l'optionModal
+  if (videoPath.isNotEmpty) {
+    optionModal(context, videoPath);  // Passer le chemin de la vidéo générée
+  } else {
+    print("Erreur dans la génération de la vidéo");
+  }
+},
               child: Text('Valider',
                   style: TextStyle(fontSize: 16, color: Colors.white)),
             ),

@@ -1,8 +1,17 @@
 import 'package:caroussel/upload_file.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer';
+import 'package:provider/provider.dart';
+import 'carousel_provider.dart';
+//import 'package:file_picker/file_picker.dart';
 
-Future<void> editModal(BuildContext context,Function(String) updateImage) {
+
+Future<void> editModal(BuildContext context,Function(String) updateImage, int index) {
+
+
+
+
+
   return showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -21,10 +30,15 @@ Future<void> editModal(BuildContext context,Function(String) updateImage) {
               ElevatedButton.icon(
                 onPressed: () async {
                   String? newPath = await pickFile();
+                  if(!context.mounted) return;
                 if (newPath != null) {
-                  updateImage(newPath); // Met à jour l'image dans le carrousel
-                  Navigator.of(context).pop(); // Ferme la modal
+                 log('🖼 Mise à jour de l\'image à l\'index $index avec $newPath');
+                  context.read<CarouselProvider>().updateImageAtIndex(index, newPath);
+                  
+                }else{
+                  log('❌ Aucun fichier sélectionné');
                 }
+                Navigator.of(context).pop(); // Ferme la modal
                 },
                 style: ElevatedButton.styleFrom(
                   minimumSize: Size(double.infinity, 50),

@@ -1,19 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:caroussel/media_uploader.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'carousel_provider.dart';
 import 'package:caroussel/carrousel.dart';
 import 'package:caroussel/drawer.dart';
 import 'dart:developer';
+import 'package:ffmpeg_kit_flutter_min_gpl/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_min_gpl/return_code.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  
   // Verrouille l'orientation sur le mode portrait
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp, // Mode portrait vertical
   ]).then((_) {
-    runApp(const MyApp());
+    runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (context) => CarouselProvider()),
+        ],
+        child: const MyApp(),
+      ),
+    );
   });
 }
+
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -29,6 +42,24 @@ class _MyAppState extends State<MyApp> {
   List<String> _imageNames = []; // Liste pour les noms des images
   //int? _selectValue = 1;
   int? _autoScrollValue;
+
+
+  Future<void> _checkFFmpegReady() async {
+    log('Vérification si FFmpeg est prêt...');
+
+    // Exécute une commande simple pour tester si FFmpeg est initialisé
+    final session = await FFmpegKit.execute('-version');
+
+    // Récupérer le retour de la session
+    final returnCode = await session.getReturnCode();
+
+    // Si le code de retour est 0, cela signifie que FFmpeg est prêt
+   if (ReturnCode.isSuccess(returnCode)) {
+      log('FFmpeg est prêt.');
+    } else {
+      log('Erreur lors de la vérification de FFmpeg.');
+    }
+  }
 
   // Modifie cette méthode pour gérer à la fois les images et leurs noms
   void _imageContainer(imagePath) {
@@ -57,6 +88,14 @@ class _MyAppState extends State<MyApp> {
       _autoScrollValue = autoScrollValue;
     });
   }
+
+   @override
+  void initState() {
+    super.initState();
+    // Vérification si FFmpeg est prêt dès le démarrage de l'application
+    _checkFFmpegReady();
+  }
+
 
 void updateImageLength(int longueurlenght) {
   setState(() {

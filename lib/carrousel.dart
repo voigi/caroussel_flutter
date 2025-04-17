@@ -188,7 +188,7 @@ class _CarrouselState extends State<Carrousel> {
               right: 2,
               child: IconButton(
                 onPressed: () async {
-                  await editModal(context,updateImageAtIndex);
+                  await editModal(context,updateImageAtIndex,currentIndex);
                 },
                 icon: Icon(Icons.edit, size: 35.0),
               ),
