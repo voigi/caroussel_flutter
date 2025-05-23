@@ -54,7 +54,7 @@ class _MyDrawerState extends State<MyDrawer> {
 
   @override
   Widget build(BuildContext context) {
-     List<String> selectedImages = context.watch<CarouselProvider>().selectedImages;
+     List<String> selectedImages = context.watch<CarouselProvider>().images;
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,

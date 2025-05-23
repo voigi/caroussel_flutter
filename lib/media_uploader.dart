@@ -3,10 +3,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
 import 'carousel_provider.dart';
 import 'dart:developer';
-import 'package:ffmpeg_kit_flutter_min_gpl/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter_min_gpl/return_code.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 //import 'package:downloads_path_provider_28/downloads_path_provider_28.dart';
-import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 
 class MediaUploader extends StatefulWidget {
@@ -38,6 +38,10 @@ class _MediaUploaderState extends State<MediaUploader> {
   // Liste pour stocker les images sélectionnées
   List<String> selectedImages = [];
 
+  test(){
+    log('hello world');
+  }
+
   Future<void> pickFile() async {
     try {
       // Sélectionner un fichier
@@ -52,9 +56,12 @@ class _MediaUploaderState extends State<MediaUploader> {
         
         // Ajouter les nouvelles images à la liste existante
         selectedImages.addAll(newSelectedImages);
+        log('selectedImages:$selectedImages');
 
         // Mettre à jour l'état global avec les images sélectionnées
-        context.read<CarouselProvider>().setSelectedImages(selectedImages);
+        context.read<CarouselProvider>().setImages(selectedImages);
+        //log('Provider images: ${context.read<CarouselProvider>().setImages(selectedImages)}');
+
         
         String? fileName = result.files.single.name;
         log(fileName);
@@ -72,6 +79,8 @@ class _MediaUploaderState extends State<MediaUploader> {
         });
 
         widget.imageContainerCallback(selectedImages);
+       log('Callback called with: $selectedImages');
+
       } else {
         setState(() {
           _selectedFile = 'Aucun fichier sélectionné.';
@@ -88,45 +97,57 @@ class _MediaUploaderState extends State<MediaUploader> {
 
   // Fonction pour convertir les images en vidéo avec FFmpeg
 Future<void> convertImagesToVideo(List<String> images) async {
-  if (images.length < 2) {
+ if (images.length < 2) {
     log('❌ Il faut au moins deux images pour créer une vidéo.');
     return;
   }
 
-  // Créer un dossier temporaire
+  log('➡️ Création du dossier temporaire...');
   final tempDir = await Directory.systemTemp.createTemp('carousel_temp_');
+  log('📁 Dossier temporaire : ${tempDir.path}');
 
-  // Copier les images dans le dossier temporaire avec des noms séquentiels
+  log('➡️ Copie et compression des images...');
   for (int i = 0; i < images.length; i++) {
-    final extension = images[i].split('.').last.toLowerCase();
-    final targetPath = '${tempDir.path}/image${i + 1}.jpg';
-    final original = File(images[i]);
+    final sourcePath = images[i];
+    final destPath = '${tempDir.path}/image${i + 1}.jpg';
 
-    // Ici on copie toujours, mais on pourrait convertir plus tard
-    await original.copy(targetPath);
+    final compressed = await FlutterImageCompress.compressAndGetFile(
+      sourcePath,
+      destPath,
+      quality: 85,
+      minWidth: 1080,
+      minHeight: 1080,
+    );
+
+    if (compressed == null) {
+      log('❌ Erreur de compression pour $sourcePath');
+      return;
+    }
+
+    log('✅ Comprimée et copiée : $destPath');
   }
 
-  // Remplacer ceci :
-  // Directory ? downloadsDir = await getExternalStorageDirectory();
-  // String  outputVideoPath = '${downloadsDir!.path}/output.mp4';
+  log('➡️ Récupération du dossier de sortie...');
+  final outputDir =  Directory('/storage/emulated/0/Download');
+  final outputVideoPath = '${outputDir.path}/video.mp4';
+  log('📦 Vidéo finale : $outputVideoPath');
 
-  // Par cela :
-final outputDir = await getExternalStorageDirectory();
-
-  final outputVideoPath = '${outputDir!.path}/output.mp4';
-
+  log('➡️ Construction de la commande FFmpeg...');
   final command =
-      '-y -framerate 0.33 -i "${tempDir.path}/image%d.jpg" -c:v libx264 -r 30 -pix_fmt yuv420p "$outputVideoPath"';
+      '-y -framerate 0.33 -i "${tempDir.path}/image%d.jpg" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -r 25 -pix_fmt yuv420p "$outputVideoPath"';
+  log('🛠️ Commande FFmpeg : $command');
 
+  log('▶️ Exécution de la commande FFmpeg...');
   final session = await FFmpegKit.execute(command);
-  final returnCode = await session.getReturnCode();
 
+  final returnCode = await session.getReturnCode();
   if (ReturnCode.isSuccess(returnCode)) {
     log('✅ Vidéo créée avec succès : $outputVideoPath');
-    // Tu peux ensuite utiliser Share.shareFile(File(outputVideoPath)); si tu veux partager
   } else {
     final logs = await session.getAllLogsAsString();
+    final stacktrace = await session.getFailStackTrace();
     log('❌ Erreur FFmpeg :\n$logs');
+    if (stacktrace != null) log('💥 Stacktrace : $stacktrace');
   }
 }
 
@@ -272,7 +293,10 @@ final outputDir = await getExternalStorageDirectory();
               onPressed: isButtonEnabled
                   ? () async {
                       // Convertir les images sélectionnées en vidéo
+
                       await convertImagesToVideo(selectedImages);
+
+                      //test();
 
                       // Lancer une action après la conversion (comme fermer le drawer)
                       Future.delayed(Duration(milliseconds: 100), () {

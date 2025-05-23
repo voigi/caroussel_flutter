@@ -6,8 +6,8 @@ import 'carousel_provider.dart';
 import 'package:caroussel/carrousel.dart';
 import 'package:caroussel/drawer.dart';
 import 'dart:developer';
-import 'package:ffmpeg_kit_flutter_min_gpl/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter_min_gpl/return_code.dart';
+import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -135,7 +135,7 @@ void updateImageLength(int longueurlenght) {
             // Affichage conditionnel du Carrousel
             if (_isContainerVisible)
               Carrousel(
-                imagePath: _imagePath!,
+                //imagePath: _imagePath!,
                 updateImageLengthCallback: updateImageLength,
                 //selectValue: _selectValue,
                 autoScrollValue: _autoScrollValue,

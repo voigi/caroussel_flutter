@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:developer';
 //import 'package:caroussel/main.dart';
+import 'package:caroussel/carousel_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:caroussel/edit_modal.dart';
+import 'package:provider/provider.dart';
 
 
 class Carrousel extends StatefulWidget {
-  final List<String> imagePath;
+  
   //final int? selectValue;
    final int? autoScrollValue ;
    final Function updateImageLengthCallback;
@@ -17,13 +19,12 @@ class Carrousel extends StatefulWidget {
   //final List String name;
 
   const Carrousel(
-      {Key? key,
-      required this.imagePath,
+      {super.key,
+     //required this.imagePath,
       required this .updateImageLengthCallback,
      // required this.onImageDeleted,
       //required this.selectValue,
-      required this.autoScrollValue})
-      : super(key: key);
+      required this.autoScrollValue});
 
   @override
   State<Carrousel> createState() => _CarrouselState();
@@ -42,8 +43,9 @@ class _CarrouselState extends State<Carrousel> {
   }
 
    void updateImageAtIndex(String newPath) {
+  final imagePaths = context.watch<CarouselProvider>().images;
   setState(() {
-    widget.imagePath[currentIndex] = newPath;
+    imagePaths[currentIndex] = newPath;
   });
 }
   // Fonction pour gérer le défilement automatique
@@ -59,7 +61,8 @@ class _CarrouselState extends State<Carrousel> {
 
   // Fonction pour démarrer le défilement automatique
   void nextIndex() {
-    if (currentIndex < widget.imagePath.length - 1) {
+    final imagePaths = context.read<CarouselProvider>().images;
+    if (currentIndex < imagePaths.length - 1) {
       setState(() {
         currentIndex++;
       });
@@ -72,21 +75,22 @@ class _CarrouselState extends State<Carrousel> {
 
   //Fonction pour supprimmer une image
   void deleteImage() {
-    if (widget.autoScrollValue == 2 || widget.imagePath.isNotEmpty) {
-      if (widget.imagePath.isNotEmpty &&
+    final imagePaths = context.read<CarouselProvider>().images;
+    if (widget.autoScrollValue == 2 || imagePaths.isNotEmpty) {
+      if (imagePaths.isNotEmpty &&
           currentIndex >= 0 &&
-          currentIndex < widget.imagePath.length) {
+          currentIndex < imagePaths.length) {
         setState(() {
-          widget.imagePath.removeAt(currentIndex);
+          imagePaths.removeAt(currentIndex);
 
           // S'assurer que l'index reste valide après suppression
-          if (currentIndex >= widget.imagePath.length) {
+          if (currentIndex >= imagePaths.length) {
             currentIndex =
-                widget.imagePath.isNotEmpty ? widget.imagePath.length - 1 : 0;
+                imagePaths.isNotEmpty ? imagePaths.length - 1 : 0;
           }
           //faire passer la nouvelle valeur de widget.imagepath.lenght à mediauploader.dart
            // Appeler la fonction pour informer mediaUploader.dart
-        widget.updateImageLengthCallback(widget.imagePath.length);
+        widget.updateImageLengthCallback(imagePaths.length);
         });
       }
     }
@@ -94,13 +98,14 @@ class _CarrouselState extends State<Carrousel> {
 
   // Fonction pour revenir à l'index précédent
   void previousIndex() {
+    final imagePaths = context.read<CarouselProvider>().images;
     if (currentIndex > 0) {
       setState(() {
         currentIndex--;
       });
     } else {
       setState(() {
-        currentIndex = widget.imagePath.length - 1; // Revenir à la fin
+        currentIndex = imagePaths.length - 1; // Revenir à la fin
       });
     }
   }
@@ -123,18 +128,21 @@ class _CarrouselState extends State<Carrousel> {
   @override
   Widget build(BuildContext context) {
     // log('selectValue: ${widget.selectValue}');
+    final imagePaths = Provider.of<CarouselProvider>(context).images;
     log('autoScrollValue: ${widget.autoScrollValue}');
-    log('Chemin de l\'image: ${widget.imagePath}');
+    log('Chemin de l\'image: $imagePaths');
+    
 
-    if (widget.imagePath.isEmpty) {
+    if (imagePaths.isEmpty) {
       // setState(() {
       //   widget.onAutoScrollChanged(null);
       // });
-      setState(() {
-        localAutoScrollValue = null; // On met localAutoScrollValue à null
-      });
+      // setState(() {
+      //   localAutoScrollValue = null; 
+      // });
+      return Center(child: Text("Ajoutez des images pour démarrer le carrousel."));
     
-      return SizedBox.shrink();
+    //  return SizedBox.shrink();
        
     }
 
@@ -160,7 +168,7 @@ class _CarrouselState extends State<Carrousel> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(20.0),
               child: Image.file(
-                File(widget.imagePath[currentIndex]),
+                File(imagePaths[currentIndex]),
                 fit: BoxFit.cover,
                 width: double.infinity,
                 height: double.infinity,
