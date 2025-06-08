@@ -1,7 +1,9 @@
+import 'dart:io';
+import 'dart:async';
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import 'dart:developer';
-import 'dart:async'; // Import pour utiliser Timer
+import 'package:chewie/chewie.dart';
 
 Future<void> optionModal(BuildContext context, String videoUrl) {
   return showDialog(
@@ -15,202 +17,120 @@ Future<void> optionModal(BuildContext context, String videoUrl) {
 class VideoPlayerModal extends StatefulWidget {
   final String videoUrl;
 
-  VideoPlayerModal({required this.videoUrl});
+  const VideoPlayerModal({required this.videoUrl});
 
   @override
   _VideoPlayerModalState createState() => _VideoPlayerModalState();
 }
 
 class _VideoPlayerModalState extends State<VideoPlayerModal> {
-  late VideoPlayerController _controller;
+  late VideoPlayerController _videoPlayerController;
+  ChewieController? _chewieController;
   late Future<void> _initializeVideoPlayerFuture;
-
-  // Variables pour la barre de progression
-  double _currentPosition = 0.0;
-  double _totalDuration = 0.0;
-  bool _isDragging = false;
-  bool _isPlaying = false; // Pour gérer l'état du play/pause
-  bool _showPlayPause = false; // Le bouton Play/Pause est caché par défaut
-  bool _initialized = false; // Pour savoir si la vidéo est prête
-  Timer? _hidePlayPauseTimer; // Timer pour cacher l'icône Play/Pause
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.network(widget.videoUrl)
-      ..setLooping(true)
-      ..setVolume(1.0);
 
-    _initializeVideoPlayerFuture = _controller.initialize().then((_) {
-      setState(() {
-        _initialized = true; // Marquer la vidéo comme prête
-      });
-    });
+    _videoPlayerController = VideoPlayerController.file(File(widget.videoUrl));
 
-    // Mettre à jour la position de la vidéo pendant sa lecture
-    _controller.addListener(() {
-      if (!_isDragging) {
-        setState(() {
-          _currentPosition = _controller.value.position.inSeconds.toDouble();
-          _totalDuration = _controller.value.duration.inSeconds.toDouble();
-        });
-      }
+    _initializeVideoPlayerFuture =
+        _videoPlayerController.initialize().then((_) {
+      _videoPlayerController.setVolume(1.0);
+
+      _chewieController = ChewieController(
+        videoPlayerController: _videoPlayerController,
+        autoPlay: true,
+        looping: true,
+        allowPlaybackSpeedChanging: false,
+        aspectRatio: _videoPlayerController.value.aspectRatio,
+        errorBuilder: (context, errorMessage) {
+          return Center(
+            child: Text(
+              errorMessage,
+              style: const TextStyle(color: Colors.white),
+            ),
+          );
+        },
+      );
+
+      setState(() {});
     });
   }
 
   @override
   void dispose() {
+    _videoPlayerController.dispose();
+    _chewieController?.dispose();
     super.dispose();
-    _controller.dispose();
-    _hidePlayPauseTimer?.cancel(); // Annuler le timer lorsqu'on quitte la page
-  }
-
-  // Fonction pour sauter à une position dans la vidéo
-  void _seekTo(double value) {
-    final position = Duration(seconds: value.toInt());
-    _controller.seekTo(position);
-  }
-
-  // Toggle play/pause
-  void _togglePlayPause() {
-    setState(() {
-      if (_controller.value.isPlaying) {
-        _controller.pause();
-        _isPlaying = false;
-      } else {
-        _controller.play();
-        _isPlaying = true;
-      }
-      _showPlayPause = true; // Montrer le bouton Play/Pause lorsque l'utilisateur appuie sur la vidéo
-    });
-
-    // Démarrer un timer pour masquer le bouton après un certain délai (par exemple, 3 secondes)
-    _hidePlayPauseTimer?.cancel(); // Annuler tout timer existant
-    _hidePlayPauseTimer = Timer(Duration(seconds: 3), () {
-      setState(() {
-        _showPlayPause = false; // Cacher le bouton après 3 secondes
-      });
-    });
-  }
-
-  // Fonction pour afficher le bouton Play/Pause au toucher
-  void _onTap() {
-    setState(() {
-      _showPlayPause = true;
-    });
-
-    // Démarrer un timer pour masquer le bouton après un certain délai (par exemple, 3 secondes)
-    _hidePlayPauseTimer?.cancel(); // Annuler tout timer existant
-    _hidePlayPauseTimer = Timer(Duration(seconds: 3), () {
-      setState(() {
-        _showPlayPause = false; // Cacher le bouton après 3 secondes
-      });
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Aperçu de votre vidéo'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Voulez-vous vraiment valider ces options ?',
-            style: TextStyle(fontSize: 13),
-          ),
-          SizedBox(height: 20),
-          FutureBuilder(
-            future: _initializeVideoPlayerFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                // La vidéo est prête à être lue, afficher l'interface vidéo
-                return Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    GestureDetector(
-                      onTap: _onTap, // Lorsque l'utilisateur appuie sur la vidéo
-                      child: AspectRatio(
-                        aspectRatio: _controller.value.aspectRatio,
-                        child: VideoPlayer(_controller),
-                      ),
-                    ),
-                    // Barre de progression (en bas)
-                    Positioned(
-                      bottom: 2,
-                      left: 20,
-                      right: 20,
-                      child: Slider(
-                        value: _currentPosition,
-                        min: 0.0,
-                        max: _totalDuration,
-                        onChanged: (value) {
-                          setState(() {
-                            _currentPosition = value;
-                            _isDragging = true;
-                          });
-                        },
-                        onChangeEnd: (value) {
-                          _seekTo(value); // Sauter à la position sélectionnée
-                          setState(() {
-                            _isDragging = false;
-                          });
-                        },
-                      ),
-                    ),
-                    // Afficher l'icône Play/Pause seulement si nécessaire
-                    if (_initialized && !_isPlaying && !_showPlayPause)
-                      Positioned(
-                        top: 20,
-                        child: IconButton(
-                          onPressed: _togglePlayPause,
-                          icon: Icon(
-                            Icons.play_circle_filled,
-                            color: Colors.white,
-                            size: 60, // Augmenter la taille du bouton pour une meilleure visibilité
-                          ),
-                        ),
-                      ),
-                    if (_showPlayPause)
-                      Positioned(
-                        top: 20,
-                        child: IconButton(
-                          onPressed: _togglePlayPause,
-                          icon: Icon(
-                            _isPlaying
-                                ? Icons.pause_circle_filled
-                                : Icons.play_circle_filled,
-                            color: Colors.white,
-                            size: 60, // Augmenter la taille du bouton pour une meilleure visibilité
-                          ),
-                        ),
-                      ),
-                  ],
-                );
-              } else {
-                // Si la vidéo n'est pas encore prête, afficher un indicateur de chargement
-                return Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
-            },
-          ),
-        ],
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
       ),
+      title: const Center(
+        child: Text(
+          'Aperçu de votre vidéo',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      content: FutureBuilder<void>(
+        future: _initializeVideoPlayerFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done &&
+              _chewieController != null &&
+              _chewieController!.videoPlayerController.value.isInitialized) {
+            return AspectRatio(
+              aspectRatio: _videoPlayerController.value.aspectRatio,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Chewie(controller: _chewieController!),
+              ),
+            );
+          } else if (snapshot.hasError) {
+            return const SizedBox(
+              height: 200,
+              child: Center(
+                child: Text(
+                  'Erreur lors du chargement de la vidéo',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            );
+          } else {
+            return const SizedBox(
+              height: 200,
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+        },
+      ),
+      actionsPadding: const EdgeInsets.only(right: 16, bottom: 12),
+      actionsAlignment: MainAxisAlignment.end,
       actions: <Widget>[
         TextButton(
           onPressed: () {
             Navigator.of(context).pop();
             log('Options annulées');
           },
-          child: Text('Annuler'),
+          child: const Text('Annuler'),
         ),
-        TextButton(
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blueAccent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
           onPressed: () {
             Navigator.of(context).pop();
             log('Options validées');
           },
-          child: Text('Valider'),
+          child: const Text('Valider'),
         ),
       ],
     );

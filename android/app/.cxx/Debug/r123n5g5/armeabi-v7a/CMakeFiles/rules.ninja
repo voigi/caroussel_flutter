@@ -23,7 +23,7 @@ rule CUSTOM_COMMAND
 # Rule for re-running cmake.
 
 rule RERUN_CMAKE
-  command = /home/voigi/Android/Sdk/cmake/3.22.1/bin/cmake --regenerate-during-build -S/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/Flutter/flutter/packages/flutter_tools/gradle/src/main/groovy -B/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/Flutter/caroussel/android/app/.cxx/Debug/r123n5g5/armeabi-v7a
+  command = /media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/backup-popOS/voigi/Android/Sdk/cmake/3.22.1/bin/cmake --regenerate-during-build -S/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/Flutter/flutter/packages/flutter_tools/gradle/src/main/groovy -B/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/Flutter/caroussel/android/app/.cxx/Debug/r123n5g5/armeabi-v7a
   description = Re-running CMake...
   generator = 1
 
@@ -32,7 +32,7 @@ rule RERUN_CMAKE
 # Rule for cleaning all built files.
 
 rule CLEAN
-  command = /home/voigi/Android/Sdk/cmake/3.22.1/bin/ninja $FILE_ARG -t clean $TARGETS
+  command = /media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/backup-popOS/voigi/Android/Sdk/cmake/3.22.1/bin/ninja $FILE_ARG -t clean $TARGETS
   description = Cleaning all built files...
 
 
@@ -40,6 +40,6 @@ rule CLEAN
 # Rule for printing all primary targets available.
 
 rule HELP
-  command = /home/voigi/Android/Sdk/cmake/3.22.1/bin/ninja -t targets
+  command = /media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/backup-popOS/voigi/Android/Sdk/cmake/3.22.1/bin/ninja -t targets
   description = All primary targets available:
 

@@ -12,11 +12,9 @@ Future<String?> pickFile() async {
 
     if (result != null && result.files.isNotEmpty) {
       String? filePath = result.files.single.path;
-      if (filePath != null) {
-        log("✅ Fichier sélectionné : $filePath");
-      return filePath;
-      }
-    }
+      log("✅ Fichier sélectionné : $filePath");
+    return filePath;
+        }
     log("⚠️ Aucun fichier sélectionné");
     return null;
 

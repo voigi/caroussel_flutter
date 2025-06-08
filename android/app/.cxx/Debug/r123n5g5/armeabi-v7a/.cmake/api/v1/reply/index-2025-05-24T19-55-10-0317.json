@@ -8,10 +8,10 @@
 		},
 		"paths" : 
 		{
-			"cmake" : "/home/voigi/Android/Sdk/cmake/3.22.1/bin/cmake",
-			"cpack" : "/home/voigi/Android/Sdk/cmake/3.22.1/bin/cpack",
-			"ctest" : "/home/voigi/Android/Sdk/cmake/3.22.1/bin/ctest",
-			"root" : "/home/voigi/Android/Sdk/cmake/3.22.1/share/cmake-3.22"
+			"cmake" : "/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/backup-popOS/voigi/Android/Sdk/cmake/3.22.1/bin/cmake",
+			"cpack" : "/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/backup-popOS/voigi/Android/Sdk/cmake/3.22.1/bin/cpack",
+			"ctest" : "/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/backup-popOS/voigi/Android/Sdk/cmake/3.22.1/bin/ctest",
+			"root" : "/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/backup-popOS/voigi/Android/Sdk/cmake/3.22.1/share/cmake-3.22"
 		},
 		"version" : 
 		{
@@ -26,7 +26,7 @@
 	"objects" : 
 	[
 		{
-			"jsonFile" : "codemodel-v2-1ac5e28c78e03e24a172.json",
+			"jsonFile" : "codemodel-v2-8930aede54a5e9eefcd6.json",
 			"kind" : "codemodel",
 			"version" : 
 			{
@@ -35,7 +35,7 @@
 			}
 		},
 		{
-			"jsonFile" : "cache-v2-24d85a29bb582e38c9c7.json",
+			"jsonFile" : "cache-v2-f420315af231264f2f04.json",
 			"kind" : "cache",
 			"version" : 
 			{
@@ -44,7 +44,7 @@
 			}
 		},
 		{
-			"jsonFile" : "cmakeFiles-v1-e0c8668e694124cd60d3.json",
+			"jsonFile" : "cmakeFiles-v1-16db8a7f5d7b04bc7eb8.json",
 			"kind" : "cmakeFiles",
 			"version" : 
 			{
@@ -59,7 +59,7 @@
 		{
 			"cache-v2" : 
 			{
-				"jsonFile" : "cache-v2-24d85a29bb582e38c9c7.json",
+				"jsonFile" : "cache-v2-f420315af231264f2f04.json",
 				"kind" : "cache",
 				"version" : 
 				{
@@ -69,7 +69,7 @@
 			},
 			"cmakeFiles-v1" : 
 			{
-				"jsonFile" : "cmakeFiles-v1-e0c8668e694124cd60d3.json",
+				"jsonFile" : "cmakeFiles-v1-16db8a7f5d7b04bc7eb8.json",
 				"kind" : "cmakeFiles",
 				"version" : 
 				{
@@ -79,7 +79,7 @@
 			},
 			"codemodel-v2" : 
 			{
-				"jsonFile" : "codemodel-v2-1ac5e28c78e03e24a172.json",
+				"jsonFile" : "codemodel-v2-8930aede54a5e9eefcd6.json",
 				"kind" : "codemodel",
 				"version" : 
 				{

@@ -1,4 +1,4 @@
-set(CMAKE_C_COMPILER "/home/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/bin/clang")
+set(CMAKE_C_COMPILER "/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/backup-popOS/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/bin/clang")
 set(CMAKE_C_COMPILER_ARG1 "")
 set(CMAKE_C_COMPILER_ID "Clang")
 set(CMAKE_C_COMPILER_VERSION "17.0.2")
@@ -21,11 +21,11 @@ set(CMAKE_C_SIMULATE_VERSION "")
 
 
 
-set(CMAKE_AR "/home/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar")
-set(CMAKE_C_COMPILER_AR "/home/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar")
-set(CMAKE_RANLIB "/home/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib")
-set(CMAKE_C_COMPILER_RANLIB "/home/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib")
-set(CMAKE_LINKER "/home/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/bin/ld.lld")
+set(CMAKE_AR "/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/backup-popOS/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar")
+set(CMAKE_C_COMPILER_AR "/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/backup-popOS/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar")
+set(CMAKE_RANLIB "/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/backup-popOS/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib")
+set(CMAKE_C_COMPILER_RANLIB "/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/backup-popOS/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib")
+set(CMAKE_LINKER "/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/backup-popOS/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/bin/ld.lld")
 set(CMAKE_MT "")
 set(CMAKE_COMPILER_IS_GNUCC )
 set(CMAKE_C_COMPILER_LOADED 1)
@@ -66,7 +66,7 @@ endif()
 
 
 
-set(CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES "/home/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/17/include;/home/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/i686-linux-android;/home/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include")
+set(CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES "/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/backup-popOS/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/17/include;/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/backup-popOS/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/i686-linux-android;/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/backup-popOS/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include")
 set(CMAKE_C_IMPLICIT_LINK_LIBRARIES "-l:libunwind.a;dl;c;-l:libunwind.a;dl")
-set(CMAKE_C_IMPLICIT_LINK_DIRECTORIES "/home/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/17/lib/linux/i386;/home/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/i686-linux-android/24;/home/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/i686-linux-android;/home/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib")
+set(CMAKE_C_IMPLICIT_LINK_DIRECTORIES "/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/backup-popOS/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/17/lib/linux/i386;/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/backup-popOS/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/i686-linux-android/24;/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/backup-popOS/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/i686-linux-android;/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/backup-popOS/voigi/Android/Sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib")
 set(CMAKE_C_IMPLICIT_LINK_FRAMEWORK_DIRECTORIES "")
