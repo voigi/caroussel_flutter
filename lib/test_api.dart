@@ -3,29 +3,44 @@ import 'package:http/http.dart' as http;
 import 'dart:developer';
 
 
-Future<List> fetchData() async {
 
  const apiKeytest ='BnTMdvUVteCn8xR13DR7r82iBdpATBZoKQYpGMYW';
 
+Future<List<dynamic>> fetchData({String keyword = 'background'}) async {
+  log('Appel API FreeSound avec le mot-clé: $keyword');
 
-  final response = await http.get(Uri.parse('https://freesound.org/apiv2/search/text/?query=background&filter=duration:[0 TO 10]&fields=id,name&token=$apiKeytest'));
+  // Construction de l'URL de recherche FreeSound
+  // Le 'query' sera le mot-clé fourni par l'utilisateur.
+  // 'filter=duration:[0 TO 10]' limite les sons à 10 secondes maximum.
+  // 'fields=id,name' demande uniquement l'ID et le nom du son pour simplifier la réponse.
+  final url = Uri.parse(
+      'https://freesound.org/apiv2/search/text/?query=$keyword&filter=duration:[0 TO 60]&fields=id,name&token=$apiKeytest');
 
+  try {
+    final response = await http.get(url);
 
-  if (response.statusCode == 200) {
-    // Si la requête est réussie (statusCode 200), parse le JSON
-    print('Réponse de l\'API: ${response.body}');
-     // Décoder la réponse JSON
-      var decodedData = json.decode(response.body);
-
-      // Convertir explicitement les résultats en une liste
-      List<dynamic> results = decodedData['results'];
-      print('Résultats: $results');
-      return results;
-  } else {
-    // Si la requête échoue, lance une exception
-    throw Exception('Erreur lors de la récupération des données');
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> responseBody = json.decode(response.body);
+      // L'API FreeSound renvoie ses résultats sous la clé 'results' dans le JSON.
+      final List<dynamic> data = responseBody['results'] ?? [];
+      log('Données API brutes reçues: $data');
+      return data;
+    } else {
+      // Gérer les erreurs de réponse HTTP (ex: 404, 500)
+      log('Échec de la récupération des données API FreeSound: Code ${response.statusCode}');
+      log('Corps de la réponse: ${response.body}');
+      throw Exception('Erreur de chargement des données FreeSound, code: ${response.statusCode}');
+    }
+  } catch (e) {
+    // Gérer les erreurs de connexion réseau ou autres exceptions
+    log('Erreur lors de l\'appel API FreeSound: $e');
+    throw Exception('Échec de la connexion à l\'API FreeSound: $e');
   }
 }
+
+
+
+
 
 Future<String?> getSoundDownloadUrl(int soundId) async {
   const apiKeytest = 'BnTMdvUVteCn8xR13DR7r82iBdpATBZoKQYpGMYW'; // Votre clé API

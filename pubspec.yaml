@@ -17,12 +17,20 @@ dependencies:
   provider: ^6.0.0
   http: ^1.3.0
   video_player: ^2.9.3
-  
+
   path_provider: ^2.1.5
-  ffmpeg_kit_flutter_new: ^1.5.0
+  ffmpeg_kit_flutter_new: ^1.6.1
   flutter_image_compress: ^2.4.0
   chewie: ^1.11.3
-  
+  audioplayers: ^6.4.0
+  collection: ^1.19.1
+  share_plus: ^11.0.0
+  url_launcher: ^6.3.1
+  font_awesome_flutter: ^10.8.0
+  share_whatsapp_plus: ^0.0.5
+  social_sharing_plus: ^1.2.3
+
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -31,3 +39,15 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # --- DÉBUT DES AJOUTS ---
+  # Déclare le dossier 'assets/fonts/' pour que Flutter inclue les fichiers qu'il contient
+  assets:
+    - assets/fonts/
+
+  # Déclare la police spécifique pour qu'elle soit reconnue par l'application
+  fonts:
+    - family: Roboto # C'est le nom de la famille de police que vous pouvez utiliser si vous stylez du texte en Flutter
+      fonts:
+        - asset: assets/fonts/Roboto-Regular.ttf # Le chemin exact vers votre fichier de police
+  # --- FIN DES AJOUTS ---

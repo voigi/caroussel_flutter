@@ -12,7 +12,7 @@ class Carrousel extends StatefulWidget {
   
   //final int? selectValue;
    final int? autoScrollValue ;
-   final Function updateImageLengthCallback;
+  //final Function updateImageLengthCallback;
    //final VoidCallback onImageDeleted;
   
 //final Function(int?) onAutoScrollChanged;
@@ -21,7 +21,7 @@ class Carrousel extends StatefulWidget {
   const Carrousel(
       {super.key,
      //required this.imagePath,
-      required this .updateImageLengthCallback,
+     // required this .updateImageLengthCallback,
      // required this.onImageDeleted,
       //required this.selectValue,
       required this.autoScrollValue});
@@ -74,24 +74,39 @@ class _CarrouselState extends State<Carrousel> {
   }
 
   //Fonction pour supprimmer une image
-  void deleteImage() {
-    final imagePaths = context.read<CarouselProvider>().images;
-    if (widget.autoScrollValue == 2 || imagePaths.isNotEmpty) {
-      if (imagePaths.isNotEmpty &&
-          currentIndex >= 0 &&
-          currentIndex < imagePaths.length) {
-        setState(() {
-          imagePaths.removeAt(currentIndex);
+void deleteImage() {
+    // Utilisez context.read pour accéder au provider sans reconstruire le widget
+    final carouselProvider = context.read<CarouselProvider>();
+    final imagePaths = carouselProvider.images; // Obtenez la liste actuelle du provider
 
-          // S'assurer que l'index reste valide après suppression
-          if (currentIndex >= imagePaths.length) {
-            currentIndex =
-                imagePaths.isNotEmpty ? imagePaths.length - 1 : 0;
+    // La condition autoScrollValue == 2 semble spécifique à votre logique, gardons-la.
+    // L'ajout de imagePaths.isNotEmpty dans la condition externe est aussi redondant
+    // car la condition interne imagePaths.isNotEmpty la couvre déjà.
+    if (widget.autoScrollValue == 2 || imagePaths.isNotEmpty) {
+      if (imagePaths.isNotEmpty && currentIndex >= 0 && currentIndex < imagePaths.length) {
+        setState(() {
+          // --- MODIFICATION CLÉ ICI ---
+          // Au lieu de modifier la liste locale et d'appeler un callback,
+          // on demande au Provider de supprimer l'image.
+          carouselProvider.removeImage(currentIndex);
+          // --- FIN MODIFICATION ---
+
+          // Note: Si le carrousel doit lui-même se mettre à jour après la suppression,
+          // et que currentIndex est géré localement dans Carrousel,
+          // vous devez vous assurer que currentIndex reste valide.
+          // Le Provider notifiera les autres widgets, mais Carrousel doit gérer son propre affichage.
+
+          // S'assurer que l'index reste valide après suppression pour le carrousel lui-même
+          if (carouselProvider.images.isNotEmpty) { // Vérifiez la liste du provider
+            if (currentIndex >= carouselProvider.images.length) {
+              currentIndex = carouselProvider.images.length - 1;
+            }
+          } else {
+            currentIndex = 0; // Si la liste est vide, réinitialiser l'index
           }
-          //faire passer la nouvelle valeur de widget.imagepath.lenght à mediauploader.dart
-           // Appeler la fonction pour informer mediaUploader.dart
-        widget.updateImageLengthCallback(imagePaths.length);
         });
+        // Pas besoin d'appeler widget.updateImageLengthCallback ici
+        // puisque le Provider s'en occupe déjà via notifyListeners().
       }
     }
   }

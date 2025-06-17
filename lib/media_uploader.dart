@@ -7,8 +7,7 @@ import 'carousel_provider.dart';
 import 'dart:developer';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
-import 'package:path_provider/path_provider.dart'; // Pour obtenir les dossiers temporaires
-//import 'package:downloads_path_provider_28/downloads_path_provider_28.dart';
+import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 
 class MediaUploader extends StatefulWidget {
@@ -16,7 +15,8 @@ class MediaUploader extends StatefulWidget {
   final void Function(List<String> imagePath) imageContainerCallback;
   final void Function(int) selectValueCallback;
   final void Function(int) autoScrollValueCallback;
-  final List<String> imagePath;
+  // `imagePath` n'est plus utilisé ici car les images sont gérées par le Provider
+  // final List<String> imagePath; // <-- Peut être supprimé du constructeur
 
   const MediaUploader({
     super.key,
@@ -24,12 +24,16 @@ class MediaUploader extends StatefulWidget {
     required this.selectValueCallback,
     required this.autoScrollValueCallback,
     required this.scaffoldKey,
-    required this.imagePath,
+    // this.imagePath = const [], // <-- Supprimer si non utilisé
   });
 
   @override
   State<MediaUploader> createState() => _MediaUploaderState();
 }
+
+// --- Fonctions utilitaires (getAudioDuration, test, prepareAudioFileForFFmpeg, convertImagesToVideo) ---
+// Ces fonctions ne sont pas directement liées au bug actuel du bouton, je ne les modifierai pas ici.
+// Assurez-vous qu'elles fonctionnent correctement par ailleurs.
 
 Future<double> getAudioDuration(String audioPath) async {
   final session = await FFmpegKit.execute('-i "$audioPath" -hide_banner');
@@ -54,9 +58,8 @@ Future<double> getAudioDuration(String audioPath) async {
 
 Future<String?> test() async {
   log('hello world');
-  await Future.delayed(
-      Duration(seconds: 1)); // optionnel, pour simuler un délai
-  return "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4"; // retourne une string non nulle
+  await Future.delayed(Duration(seconds: 1));
+  return "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4";
 }
 
 Future<String?> prepareAudioFileForFFmpeg({
@@ -69,7 +72,7 @@ Future<String?> prepareAudioFileForFFmpeg({
     final response = await request.close();
 
     if (response.statusCode == HttpStatus.ok) {
-      final appTempDir = await getTemporaryDirectory(); // Assurez-vous d'importer path_provider
+      final appTempDir = await getTemporaryDirectory();
       final filePath = '${appTempDir.path}/$fileName';
       final file = File(filePath);
       await response.pipe(file.openWrite());
@@ -88,6 +91,7 @@ Future<String?> prepareAudioFileForFFmpeg({
 Future<String> convertImagesToVideo(
   List<String> images, {
   String? audioSource,
+  String? videoTitle,
 }) async {
   log('📥 Début de la fonction convertImagesToVideo');
   if (images.length < 2) {
@@ -95,7 +99,7 @@ Future<String> convertImagesToVideo(
     return "";
   }
 
-  final tempDir = await Directory.systemTemp.createTemp('carousel_temp_');
+  final tempDir = await getTemporaryDirectory();
   log('📁 Dossier temporaire créé : ${tempDir.path}');
 
   // --- Étape 1 : Compression et préparation des images ---
@@ -121,12 +125,12 @@ Future<String> convertImagesToVideo(
   }
 
   final outputDir = Directory('/storage/emulated/0/Movies');
-  final outputVideoPath = '${outputDir.path}/video_${DateTime.now().millisecondsSinceEpoch}.mp4';
+  final outputVideoPath = '${outputDir.path}/$videoTitle.mp4';
   log('📽️ Chemin de sortie vidéo : $outputVideoPath');
 
   // --- Vérification et préparation de la source audio ---
   String? finalAudioFilePath;
-  double audioDuration = 0.0; // Initialisez la durée audio à 0
+  double audioDuration = 0.0;
 
   if (audioSource != null && audioSource.isNotEmpty) {
     if (audioSource.startsWith('http://') || audioSource.startsWith('https://')) {
@@ -151,31 +155,28 @@ Future<String> convertImagesToVideo(
     if (finalAudioFilePath != null) {
       audioDuration = await getAudioDuration(finalAudioFilePath);
       if (audioDuration == 0.0) {
-        log('❌ Impossible d\'obtenir la durée de l\'audio. La vidéo sera sans audio ou utilisera une durée d\'image par défaut.');
+        log('❌ Impossible d\'obtenir la durée de l\'audio. La vidéo sera sans audio ou utilisera une durée d\'image par default.');
       }
     }
   } else {
     log('⚠️ Aucun chemin audio ou URL audio fourni. La vidéo n\'aura pas de son.');
   }
 
-  final videoNoAudioPath = '${tempDir.path}/video_no_audio.mp4';
+  final videoNoAudioPath = '${tempDir.path}/{$videoTitle}video_no_audio.mp4';
 
-  // --- Calcul de la durée par image et durée totale de la vidéo image ---
-  double durationPerImage = 5.0; // Durée par défaut si pas d'audio ou durée audio non récupérable
-  double finalVideoDuration = 0.0; // Durée finale de la vidéo (sera la durée audio si présente)
+  double durationPerImage = 5.0;
+  double finalVideoDuration = 0.0;
 
   if (audioDuration > 0 && images.isNotEmpty) {
     durationPerImage = audioDuration / images.length;
-    finalVideoDuration = audioDuration; // La vidéo finale aura la durée de l'audio
+    finalVideoDuration = audioDuration;
     log('⏳ Durée par image calculée : $durationPerImage secondes.');
   } else {
     log('⏳ Utilisation de la durée par défaut de 5 secondes par image.');
-    finalVideoDuration = durationPerImage * images.length; // Durée calculée si pas d'audio
+    finalVideoDuration = durationPerImage * images.length;
   }
   log('🎥 Durée totale de la vidéo finale prévue : $finalVideoDuration secondes');
 
-
-  // --- Étape 2 : Création de la vidéo sans audio ---
   String imageInputStrings = "";
   for(int i = 0; i < images.length; i++) {
     imageInputStrings += '-i "${tempDir.path}/image${i + 1}.jpg" ';
@@ -204,14 +205,9 @@ Future<String> convertImagesToVideo(
   }
   log('✅ Vidéo sans audio créée avec succès.');
 
-  // --- Étape 3 : Ajout de l'audio et du Fade Out ---
   if (finalAudioFilePath != null && finalAudioFilePath.isNotEmpty) {
-    // Définir la durée du fondu (par exemple, les 3 dernières secondes de la vidéo)
-    const double fadeOutDuration = 3.0; // Durée du fondu en secondes
-    // Calculer le temps de début du fondu
+    const double fadeOutDuration = 3.0;
     final double fadeOutStartTime = finalVideoDuration - fadeOutDuration;
-
-    // Assurez-vous que le temps de début du fondu n'est pas négatif
     final double safeFadeOutStartTime = fadeOutStartTime > 0 ? fadeOutStartTime : 0.0;
 
     String probeCommand = '-i "$finalAudioFilePath" -hide_banner';
@@ -220,8 +216,7 @@ Future<String> convertImagesToVideo(
     var probeLogs = await probeSession.getLogsAsString();
     log('📜 Logs FFprobe audio:\n$probeLogs');
 
-    // Commande finale : Copie vidéo, transcodage audio en AAC avec boost de volume ET APPLICATION DU FADE OUT
-String commandWithAudio = '-y -i "$videoNoAudioPath" -i "$finalAudioFilePath" '
+    String commandWithAudio = '-y -i "$videoNoAudioPath" -i "$finalAudioFilePath" '
     '-filter_complex "' '[0:v]fade=t=out:st=$safeFadeOutStartTime:d=$fadeOutDuration[v_faded]; ' '[1:a]afade=t=out:st=$safeFadeOutStartTime:d=$fadeOutDuration[a_faded]" ' '-map "[v_faded]" -map "[a_faded]" ' '-c:v libx264 -preset veryfast -crf 26 -c:a aac -strict experimental ' '"$outputVideoPath"';
 
     log('🛠️ Commande FFmpeg pour ajout audio et fade out : $commandWithAudio');
@@ -229,7 +224,6 @@ String commandWithAudio = '-y -i "$videoNoAudioPath" -i "$finalAudioFilePath" '
     returnCode = await session.getReturnCode();
     logs = await session.getLogsAsString();
     log('📜 Logs ajout audio et fade out:\n$logs');
-
 
     if (!ReturnCode.isSuccess(returnCode)) {
       log('❌ Erreur lors de l’ajout de l’audio et du fade out. Code de retour: ${returnCode?.getValue()}');
@@ -239,16 +233,9 @@ String commandWithAudio = '-y -i "$videoNoAudioPath" -i "$finalAudioFilePath" '
     return outputVideoPath;
   } else {
     log('⚠️ Pas d’audio préparé, on renvoie la vidéo sans audio. Aucun fade out appliqué.');
-    // Si pas d'audio, vous pourriez choisir d'appliquer un fade out à la vidéo seule ici aussi,
-    // ou simplement renvoyer le chemin de la vidéo sans audio.
-    // Pour l'instant, on renvoie la vidéo seule sans fade out.
     return videoNoAudioPath;
   }
 }
-
-
-
-
 
 class _MediaUploaderState extends State<MediaUploader> {
   String? _selectedFile;
@@ -256,8 +243,9 @@ class _MediaUploaderState extends State<MediaUploader> {
   int? selectValue;
   int? autoScrollValue;
 
-  // Liste pour stocker les images sélectionnées
-  List<String> selectedImages = [];
+  // Cette liste n'est plus la source de vérité.
+  // Elle peut être supprimée si elle n'est pas utilisée pour d'autres logiques internes.
+  // List<String> selectedImages = [];
 
   Future<void> testWritePermission() async {
     final testFile = File('/storage/emulated/0/Download/test_permission.txt');
@@ -271,62 +259,70 @@ class _MediaUploaderState extends State<MediaUploader> {
 
   Future<void> pickFile() async {
     try {
-      // Sélectionner un fichier
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.image,
         allowMultiple: false,
       );
 
       if (result != null) {
-        // Obtenir les chemins des fichiers sélectionnés
-        List<String> newSelectedImages =
-            result.files.map((file) => file.path!).toList();
+        List<String> newSelectedImages = result.files.map((file) => file.path!).toList();
 
-        // Ajouter les nouvelles images à la liste existante
-        selectedImages.addAll(newSelectedImages);
-        log('selectedImages:$selectedImages');
+        final carouselProvider = context.read<CarouselProvider>();
+        List<String> currentProviderImages = List.from(carouselProvider.images);
+        currentProviderImages.addAll(newSelectedImages);
+        carouselProvider.setImages(currentProviderImages);
 
-        // Mettre à jour l'état global avec les images sélectionnées
-        context.read<CarouselProvider>().setImages(selectedImages);
-        //log('Provider images: ${context.read<CarouselProvider>().setImages(selectedImages)}');
+        log('Images combinées pour le Provider: ${carouselProvider.images}');
+        log('Nombre d\'images dans le Provider: ${carouselProvider.images.length}');
 
         String? fileName = result.files.single.name;
         log(fileName);
 
-        String extension = fileName
-            .substring(fileName.lastIndexOf('.')); // Inclut le point (.)
+        String extension = fileName.substring(fileName.lastIndexOf('.'));
 
-        // Tronquer le nom du fichier si nécessaire
         if (fileName.length > 20) {
           fileName = '${fileName.substring(0, 10)} ...$extension';
         }
 
         setState(() {
           _selectedFile = 'fichier sélectionné: $fileName';
+          // Pas besoin de mettre à jour la liste selectedImages locale si elle n'est pas utilisée.
+          // selectedImages.addAll(newSelectedImages);
         });
 
-        widget.imageContainerCallback(selectedImages);
-        log('Callback called with: $selectedImages');
+        // Appeler le callback avec la liste d'images du Provider
+        widget.imageContainerCallback(carouselProvider.images);
+        log('Callback called with: ${carouselProvider.images}');
+
       } else {
         setState(() {
           _selectedFile = 'Aucun fichier sélectionné.';
         });
       }
     } catch (e) {
-      print("Erreur lors de la sélection du fichier : $e");
+      log("Erreur lors de la sélection du fichier : $e");
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur lors de la sélection du fichier: $e')),
+        );
+      }
       setState(() {
         _selectedFile = 'Erreur lors de la sélection du fichier.';
       });
     }
   }
 
-  // Fonction pour convertir les images en vidéo avec FFmpeg
-
   @override
   Widget build(BuildContext context) {
+    // Écouter le CarouselProvider pour obtenir le nombre d'images.
+    final carouselProvider = context.watch<CarouselProvider>();
+    final int imageCount = carouselProvider.imageCount;
+
+    // La variable `selectedImages` locale du State n'est plus nécessaire pour ces conditions.
+    // Nous utilisons `imageCount` du Provider.
     bool isButtonEnabled = _selectedFile != null &&
         autoScrollValue != null &&
-        selectedImages.length > 1;
+        imageCount >= 2; // Condition basée sur le Provider
 
     return Form(
       key: _formKey,
@@ -335,8 +331,8 @@ class _MediaUploaderState extends State<MediaUploader> {
         children: [
           Row(
             children: [
-              Icon(Icons.looks_one, color: Colors.green),
-              Text(
+              const Icon(Icons.looks_one, color: Colors.green),
+              const Text(
                 'Choisir un Fichier',
                 style: TextStyle(
                     fontSize: 17,
@@ -345,12 +341,12 @@ class _MediaUploaderState extends State<MediaUploader> {
               ),
             ],
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Tooltip(
             message: 'Cliquez pour choisir un fichier',
             preferBelow: true,
-            margin: EdgeInsets.all(8),
-            textStyle: TextStyle(color: Colors.white),
+            margin: const EdgeInsets.all(8),
+            textStyle: const TextStyle(color: Colors.white),
             decoration: BoxDecoration(
               color: const Color.fromARGB(255, 194, 199, 204),
               borderRadius: BorderRadius.circular(8),
@@ -358,25 +354,25 @@ class _MediaUploaderState extends State<MediaUploader> {
             child: ElevatedButton.icon(
               onPressed: pickFile,
               style: ElevatedButton.styleFrom(
-                minimumSize: Size(double.infinity, 50),
+                minimumSize: const Size(double.infinity, 50),
                 backgroundColor: Colors.blue,
               ),
-              icon: Icon(Icons.upload_file, color: Colors.white),
+              icon: const Icon(Icons.upload_file, color: Colors.white),
               label: Text(
                 'Choisir un fichier'.toUpperCase(),
-                style: TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white),
               ),
             ),
           ),
-          Text('Formats supportés : JPG, PNG',
+          const Text('Formats supportés : JPG, PNG',
               style: TextStyle(color: Colors.white)),
           const SizedBox(height: 20),
           Row(
             children: [
               Row(
                 children: [
-                  Icon(Icons.looks_two, color: Colors.green),
-                  Text(
+                  const Icon(Icons.looks_two, color: Colors.green),
+                  const Text(
                     'Défilement Automatique',
                     style: TextStyle(
                         fontSize: 17,
@@ -385,18 +381,19 @@ class _MediaUploaderState extends State<MediaUploader> {
                   ),
                 ],
               ),
-              SizedBox(width: 30),
+              const SizedBox(width: 30),
+              // Mise à jour de l'icône pour dépendre du Provider
               Icon(
-                autoScrollValue == 1 && selectedImages.length > 1
+                autoScrollValue == 1 && imageCount >= 2
                     ? Icons.check_circle
-                    : autoScrollValue == 2 && selectedImages.length > 1
+                    : autoScrollValue == 2 && imageCount >= 2
                         ? Icons.cancel
-                        : Icons.circle,
-                color: autoScrollValue == 1 && selectedImages.length > 1
+                        : Icons.circle, // Ou Icons.radio_button_unchecked pour une icône neutre
+                color: autoScrollValue == 1 && imageCount >= 2
                     ? Colors.green
-                    : autoScrollValue == 2 && selectedImages.length > 1
+                    : autoScrollValue == 2 && imageCount >= 2
                         ? Colors.red
-                        : Colors.transparent,
+                        : Colors.transparent, // Ou Colors.grey pour une icône neutre visible
               ),
             ],
           ),
@@ -405,11 +402,10 @@ class _MediaUploaderState extends State<MediaUploader> {
             dropdownColor: Colors.white,
             hint: Text(
               'Défilement automatique ?',
-              style: _selectedFile == null ||
-                      widget.imagePath.isEmpty ||
-                      selectedImages.length <= 1
-                  ? TextStyle(color: Colors.grey)
-                  : TextStyle(color: Colors.black),
+              // Mise à jour de la condition pour le hint et la couleur du texte
+              style: _selectedFile == null || imageCount < 2
+                  ? const TextStyle(color: Colors.grey)
+                  : const TextStyle(color: Colors.black),
             ),
             decoration: const InputDecoration(
               labelText: 'Défilement automatique Oui/Non',
@@ -421,20 +417,17 @@ class _MediaUploaderState extends State<MediaUploader> {
             items: [
               DropdownMenuItem(
                 value: 1,
-                child: Text(selectedImages.length <= 1
-                    ? 'Défilement automatique ?'
-                    : 'Oui'),
+                // Le texte devrait aussi dépendre de imageCount
+                child: Text(imageCount < 2 ? 'Défilement automatique ?' : 'Oui'),
               ),
               DropdownMenuItem(
                 value: 2,
-                child: Text(selectedImages.length <= 1
-                    ? 'Défilement automatique ?'
-                    : 'Non'),
+                // Le texte devrait aussi dépendre de imageCount
+                child: Text(imageCount < 2 ? 'Défilement automatique ?' : 'Non'),
               ),
             ],
-            onChanged: _selectedFile == null ||
-                    selectedImages.isEmpty ||
-                    selectedImages.length <= 1
+            // Mise à jour de la condition pour onPressed du Dropdown
+            onChanged: _selectedFile == null || imageCount < 2
                 ? null
                 : (value) {
                     setState(() {
@@ -443,35 +436,32 @@ class _MediaUploaderState extends State<MediaUploader> {
                     });
                   },
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Tooltip(
-            message: _selectedFile != null && autoScrollValue != null
+            message: _selectedFile != null && autoScrollValue != null && imageCount >= 2
                 ? 'Cliquez pour valider'
-                : 'Veuillez sélectionner un fichier et une option',
+                : 'Veuillez sélectionner au moins deux fichiers et une option de défilement',
             preferBelow: true,
-            margin: EdgeInsets.all(13),
-            textStyle: TextStyle(color: Colors.white),
+            margin: const EdgeInsets.all(13),
+            textStyle: const TextStyle(color: Colors.white),
             decoration: BoxDecoration(
               color: isButtonEnabled ? Colors.blue : Colors.grey,
               borderRadius: BorderRadius.circular(8),
             ),
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                minimumSize: Size(double.infinity, 50),
+                minimumSize: const Size(double.infinity, 50),
                 backgroundColor: isButtonEnabled ? Colors.green : Colors.grey,
               ),
               onPressed: isButtonEnabled
                   ? () async {
                       // Convertir les images sélectionnées en vidéo
+                      // Utilisez carouselProvider.images pour la conversion
+                      await convertImagesToVideo(carouselProvider.images);
+                      // testWritePermission(); // Décommenter si nécessaire
+                      // test(); // Décommenter si nécessaire
 
-                      await // convertImagesToVideo(selectedImages);
-
-                          //testWritePermission();
-
-                          test();
-
-                      // Lancer une action après la conversion (comme fermer le drawer)
-                      Future.delayed(Duration(milliseconds: 100), () {
+                      Future.delayed(const Duration(milliseconds: 100), () {
                         if (widget.scaffoldKey.currentState != null &&
                             _selectedFile != null &&
                             autoScrollValue != null) {
@@ -480,10 +470,12 @@ class _MediaUploaderState extends State<MediaUploader> {
                       });
                     }
                   : null,
-              child: Text('Valider',
-                  style: isButtonEnabled
-                      ? TextStyle(color: Colors.white)
-                      : TextStyle(color: Colors.grey[600])),
+              child: Text(
+                'Valider',
+                style: isButtonEnabled
+                    ? const TextStyle(color: Colors.white)
+                    : TextStyle(color: Colors.grey[600]),
+              ),
             ),
           ),
         ],
