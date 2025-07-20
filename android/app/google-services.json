@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "589160154476",
+    "project_id": "carrousel-test",
+    "storage_bucket": "carrousel-test.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:589160154476:android:f4ace17d1790f57b64df49",
+        "android_client_info": {
+          "package_name": "com.example.caroussel"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBSDAUsNkC5nwkX8xVqT8eoMj_nPSI-rPA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

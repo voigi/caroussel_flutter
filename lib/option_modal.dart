@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart'; // Gardons pour le fallback ou "Aut
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:share_whatsapp_plus/share_whatsapp_plus.dart';
 import 'package:social_sharing_plus/social_sharing_plus.dart'; // NOUVEL IMPORT ICI
+import 'package:caroussel/notif.dart'; // Importation nécessaire pour openFileExplorer
 
 // La fonction qui affiche la modale principale (VideoPlayerModal)
 Future<void> optionModal(BuildContext context, String videoUrl, {String? videoTitle}) {
@@ -44,8 +45,12 @@ class _VideoPlayerModalState extends State<VideoPlayerModal> {
       _videoPlayerController.setVolume(1.0);
       _chewieController = ChewieController(
         videoPlayerController: _videoPlayerController,
-        autoPlay: true,
-        looping: true,
+        autoPlay:  true,
+        looping:  false,
+        showControls: true,
+        showControlsOnInitialize: true,
+       // showControlsOnPause: true, // Afficher les contrôles à la pause
+        showOptions: true,
         allowPlaybackSpeedChanging: false,
         aspectRatio: _videoPlayerController.value.aspectRatio,
         errorBuilder: (context, errorMessage) {
@@ -57,10 +62,23 @@ class _VideoPlayerModalState extends State<VideoPlayerModal> {
           );
         },
       );
+      _videoPlayerController.addListener(_videoListener);
       setState(() {});
     });
   }
-
+  void _videoListener() {
+    // Si la vidéo est terminée et qu'elle n'est pas en cours de lecture
+    if (_videoPlayerController.value.position >= _videoPlayerController.value.duration &&
+        !_videoPlayerController.value.isPlaying) {
+      // Se remet au début
+      _videoPlayerController.seekTo(Duration.zero);
+      
+      log('[VideoPlayerModal] Vidéo terminée, remise à 0.');
+      // Ne pas appeler _videoPlayerController.pause(); car elle n'est déjà pas en lecture,
+      // et ne pas appeler .play() car on ne veut pas qu'elle se relance.
+      _videoPlayerController.pause();
+    }
+  }
   @override
   void dispose() {
     _videoPlayerController.dispose();
@@ -497,8 +515,9 @@ class _VideoPlayerModalState extends State<VideoPlayerModal> {
             ),
           ),
           onPressed: () {
-            Navigator.of(context).pop();
-            _showCustomShareOptionsModal();
+             Navigator.of(context).pop();
+             _showCustomShareOptionsModal();
+           // openFileExplorer();
           },
           child: const Text('Partager'),
         ),

@@ -1,5 +1,6 @@
 // Fichier : my_drawer.dart
 
+import 'package:caroussel/notif.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:caroussel/option_modal.dart';
@@ -438,7 +439,7 @@ class _MyDrawerState extends State<MyDrawer> {
                       SizedBox(width: 8),
                       Text(
                         'Choisissez un son proposé',
-                        style: TextStyle(color: Colors.black,fontSize:15.5),
+                        style: TextStyle(color: Colors.black,fontSize:13.7),
                       ),
                     ],
                   ),
@@ -624,15 +625,6 @@ class _MyDrawerState extends State<MyDrawer> {
                           if (selectedItem != null) {
                             final int soundId = selectedItem['id'];
                             audioSourceForVideo = await getSoundDownloadUrl(soundId);
-
-                            if (audioSourceForVideo == null) {
-                              log('❌ Échec de la récupération de l\'URL audio depuis l\'API pour ID: $soundId');
-                              Navigator.of(stableContext, rootNavigator: true).pop();
-                              ScaffoldMessenger.of(stableContext).showSnackBar(
-                                const SnackBar(content: Text("Erreur: Impossible de charger le son de l'API pour la vidéo")),
-                              );
-                              return;
-                            }
                             log('Source audio: URL API récupérée: $audioSourceForVideo');
                           } else {
                             log('Aucun élément correspondant trouvé pour la musique sélectionnée dans _data pour la vidéo.');
@@ -664,6 +656,8 @@ class _MyDrawerState extends State<MyDrawer> {
 
                         if (videoUrl.isNotEmpty) {
                           optionModal(stableContext, videoUrl, videoTitle: videoTitle);
+                          showVideoSavedNotification(); // Initialiser les notifications si ce n'est pas déjà fait
+
                         } else {
                           ScaffoldMessenger.of(stableContext).showSnackBar(
                             const SnackBar(content: Text("Erreur dans la génération de la vidéo")),

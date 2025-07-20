@@ -29,12 +29,13 @@ Future<void> editModal(BuildContext context,Function(String) updateImage, int in
               SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: () async {
-                  String? newPath = await pickFile();
-                  if(!context.mounted) return;
-               log('🖼 Mise à jour de l\'image à l\'index $index avec $newPath');
-                context.read<CarouselProvider>().updateImageAtIndex(index, newPath!);
-                
-                              Navigator.of(context).pop(); // Ferme la modal
+              String? newPath = await pickFile();
+              if (!context.mounted) return;
+              if (newPath != null) {
+                log('🖼 Mise à jour de l\'image à l\'index $index avec $newPath');
+                context.read<CarouselProvider>().updateImageAtIndex(index, newPath);
+                Navigator.of(context).pop(); // Ferme la modal
+              }
                 },
                 style: ElevatedButton.styleFrom(
                   minimumSize: Size(double.infinity, 50),

@@ -1,0 +1,2 @@
+/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/Flutter/caroussel/android/app/.cxx/Debug/4t4594z2/x86/CMakeFiles/edit_cache.dir
+/media/voigi/5d2f4708-d7e0-4bcf-9686-3a77f95e8118/Flutter/caroussel/android/app/.cxx/Debug/4t4594z2/x86/CMakeFiles/rebuild_cache.dir

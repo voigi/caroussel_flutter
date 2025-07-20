@@ -15,8 +15,6 @@ class MediaUploader extends StatefulWidget {
   final void Function(List<String> imagePath) imageContainerCallback;
   final void Function(int) selectValueCallback;
   final void Function(int) autoScrollValueCallback;
-  // `imagePath` n'est plus utilisé ici car les images sont gérées par le Provider
-  // final List<String> imagePath; // <-- Peut être supprimé du constructeur
 
   const MediaUploader({
     super.key,
@@ -24,7 +22,6 @@ class MediaUploader extends StatefulWidget {
     required this.selectValueCallback,
     required this.autoScrollValueCallback,
     required this.scaffoldKey,
-    // this.imagePath = const [], // <-- Supprimer si non utilisé
   });
 
   @override
@@ -55,6 +52,69 @@ Future<double> getAudioDuration(String audioPath) async {
     return 0;
   }
 }
+
+Future<void> manageVideoFiles() async {
+  final moviesDir = Directory('/storage/emulated/0/Movies');
+
+  if (!await moviesDir.exists()) {
+    print('❌ Le dossier Movies n\'existe pas.');
+    return;
+  }
+
+  // Créer le dossier Archives s'il n'existe pas
+  final archivesDir = Directory('${moviesDir.path}/Archives');
+  if (!await archivesDir.exists()) {
+    await archivesDir.create(recursive: true);
+    print('📁 Dossier Archives créé.');
+  }
+
+  // Filtrer les fichiers vidéo (pas les dossiers, et pas déjà dans Archives)
+  final videoFiles = moviesDir.listSync().whereType<File>().where((file) {
+    final path = file.path.toLowerCase();
+    return (path.endsWith('.mp4') || path.endsWith('.mov') || path.endsWith('.avi')) &&
+           !path.contains('/Archives/');
+  }).toList();
+
+  // Trier par date de modification (plus récentes d'abord)
+  videoFiles.sort((a, b) => b.statSync().modified.compareTo(a.statSync().modified));
+
+  // Garder les 5 plus récentes
+  if (videoFiles.length > 5) {
+    final toArchive = videoFiles.sublist(5);
+
+    for (final file in toArchive) {
+      final fileName = file.uri.pathSegments.last;
+      final newPath = '${archivesDir.path}/$fileName';
+
+      try {
+        await file.rename(newPath);
+        print('✅ Fichier archivé : $fileName');
+      } catch (e) {
+        print('⚠️ Erreur lors du déplacement de $fileName : $e');
+      }
+    }
+  } else {
+    print('🟢 Moins de 6 vidéos : aucune archive nécessaire.');
+  }
+}
+
+
+Future<String> getUniqueVideoPath(String baseTitle, String extension, Directory directory) async {
+  String candidateTitle = baseTitle;
+  int counter = 1;
+
+  while (true) {
+    final candidatePath = '${directory.path}/$candidateTitle$extension';
+    final file = File(candidatePath);
+    if (!(await file.exists())) {
+      return candidatePath;
+    }
+    candidateTitle = '${baseTitle}($counter)';
+    counter++;
+  }
+}
+
+
 
 Future<String?> test() async {
   log('hello world');
@@ -99,6 +159,8 @@ Future<String> convertImagesToVideo(
     return "";
   }
 
+
+
   final tempDir = await getTemporaryDirectory();
   log('📁 Dossier temporaire créé : ${tempDir.path}');
 
@@ -125,8 +187,14 @@ Future<String> convertImagesToVideo(
   }
 
   final outputDir = Directory('/storage/emulated/0/Movies');
-  final outputVideoPath = '${outputDir.path}/$videoTitle.mp4';
+  final outputVideoPath = await getUniqueVideoPath(videoTitle ?? 'video', '.mp4', outputDir);
+
   log('📽️ Chemin de sortie vidéo : $outputVideoPath');
+
+  if (outputVideoPath.isNotEmpty) {
+   
+  await manageVideoFiles(); // ta fonction qui déplace les anciennes vidéos dans Archives
+}
 
   // --- Vérification et préparation de la source audio ---
   String? finalAudioFilePath;
@@ -243,10 +311,6 @@ class _MediaUploaderState extends State<MediaUploader> {
   int? selectValue;
   int? autoScrollValue;
 
-  // Cette liste n'est plus la source de vérité.
-  // Elle peut être supprimée si elle n'est pas utilisée pour d'autres logiques internes.
-  // List<String> selectedImages = [];
-
   Future<void> testWritePermission() async {
     final testFile = File('/storage/emulated/0/Download/test_permission.txt');
     try {
@@ -286,11 +350,8 @@ class _MediaUploaderState extends State<MediaUploader> {
 
         setState(() {
           _selectedFile = 'fichier sélectionné: $fileName';
-          // Pas besoin de mettre à jour la liste selectedImages locale si elle n'est pas utilisée.
-          // selectedImages.addAll(newSelectedImages);
         });
 
-        // Appeler le callback avec la liste d'images du Provider
         widget.imageContainerCallback(carouselProvider.images);
         log('Callback called with: ${carouselProvider.images}');
 
@@ -314,28 +375,31 @@ class _MediaUploaderState extends State<MediaUploader> {
 
   @override
   Widget build(BuildContext context) {
-    // Écouter le CarouselProvider pour obtenir le nombre d'images.
     final carouselProvider = context.watch<CarouselProvider>();
     final int imageCount = carouselProvider.imageCount;
 
-    // La variable `selectedImages` locale du State n'est plus nécessaire pour ces conditions.
-    // Nous utilisons `imageCount` du Provider.
     bool isButtonEnabled = _selectedFile != null &&
         autoScrollValue != null &&
-        imageCount >= 2; // Condition basée sur le Provider
+        imageCount >= 2;
+    
+    // Condition pour activer/désactiver le dropdown du défilement automatique
+    bool canSelectScroll = imageCount >= 2;
 
     return Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        // Utilisez MainAxisSize.min pour que la colonne ne prenne que l'espace nécessaire.
+        // C'est crucial si le parent a une hauteur illimitée (comme un Expanded).
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
               const Icon(Icons.looks_one, color: Colors.green),
               const Text(
-                'Choisir un Fichier',
+                'Choisir un Média',
                 style: TextStyle(
-                    fontSize: 17,
+                    fontSize: 15.21,
                     fontWeight: FontWeight.bold,
                     color: Colors.blue),
               ),
@@ -343,7 +407,7 @@ class _MediaUploaderState extends State<MediaUploader> {
           ),
           const SizedBox(height: 10),
           Tooltip(
-            message: 'Cliquez pour choisir un fichier',
+            message: 'Cliquez pour choisir des images (JPG, PNG)',
             preferBelow: true,
             margin: const EdgeInsets.all(8),
             textStyle: const TextStyle(color: Colors.white),
@@ -359,56 +423,42 @@ class _MediaUploaderState extends State<MediaUploader> {
               ),
               icon: const Icon(Icons.upload_file, color: Colors.white),
               label: Text(
-                'Choisir un fichier'.toUpperCase(),
+                'Choisir des fichiers'.toUpperCase(),
                 style: const TextStyle(color: Colors.white),
               ),
             ),
           ),
-          const Text('Formats supportés : JPG, PNG',
-              style: TextStyle(color: Colors.white)),
-          const SizedBox(height: 20),
+          // if (_selectedFile != null)
+          //   Padding(
+          //     padding: const EdgeInsets.only(top: 8.0),
+          //     child: Text(
+          //       _selectedFile!,
+          //       style: const TextStyle(color: Colors.black, fontSize: 14),
+          //     ),
+          //   ),
+          // const Text('Formats supportés : JPG, PNG',
+          //     style: TextStyle(color: Colors.grey)),
+          const SizedBox(height: 10),
           Row(
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.looks_two, color: Colors.green),
-                  const Text(
-                    'Défilement Automatique',
-                    style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue),
-                  ),
-                ],
+              const Icon(Icons.looks_two, color: Colors.green),
+              const Text(
+                'Défilement Automatique',
+                style: TextStyle(
+                    fontSize: 15.21,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue),
               ),
-              const SizedBox(width: 30),
-              // Mise à jour de l'icône pour dépendre du Provider
-              Icon(
-                autoScrollValue == 1 && imageCount >= 2
-                    ? Icons.check_circle
-                    : autoScrollValue == 2 && imageCount >= 2
-                        ? Icons.cancel
-                        : Icons.circle, // Ou Icons.radio_button_unchecked pour une icône neutre
-                color: autoScrollValue == 1 && imageCount >= 2
-                    ? Colors.green
-                    : autoScrollValue == 2 && imageCount >= 2
-                        ? Colors.red
-                        : Colors.transparent, // Ou Colors.grey pour une icône neutre visible
-              ),
+              const SizedBox(width: 10),
+  
             ],
           ),
           const SizedBox(height: 5),
           DropdownButtonFormField<int>(
             dropdownColor: Colors.white,
-            hint: Text(
-              'Défilement automatique ?',
-              // Mise à jour de la condition pour le hint et la couleur du texte
-              style: _selectedFile == null || imageCount < 2
-                  ? const TextStyle(color: Colors.grey)
-                  : const TextStyle(color: Colors.black),
-            ),
+           
             decoration: const InputDecoration(
-              labelText: 'Défilement automatique Oui/Non',
+              labelText: ' Oui/Non',
               border: OutlineInputBorder(
                   borderSide:
                       BorderSide(color: Color.fromRGBO(13, 71, 161, 1))),
@@ -417,67 +467,49 @@ class _MediaUploaderState extends State<MediaUploader> {
             items: [
               DropdownMenuItem(
                 value: 1,
-                // Le texte devrait aussi dépendre de imageCount
-                child: Text(imageCount < 2 ? 'Défilement automatique ?' : 'Oui'),
+                child: Text(canSelectScroll ? 'Oui' : 'Indisponible'),
               ),
               DropdownMenuItem(
                 value: 2,
-                // Le texte devrait aussi dépendre de imageCount
-                child: Text(imageCount < 2 ? 'Défilement automatique ?' : 'Non'),
+                child: Text(canSelectScroll ? 'Non' : 'Indisponible'),
               ),
             ],
-            // Mise à jour de la condition pour onPressed du Dropdown
-            onChanged: _selectedFile == null || imageCount < 2
-                ? null
-                : (value) {
+            onChanged: canSelectScroll
+                ? (value) {
                     setState(() {
                       autoScrollValue = value;
                       widget.autoScrollValueCallback(value!);
                     });
-                  },
+                  }
+                : null,
           ),
           const SizedBox(height: 20),
-          Tooltip(
-            message: _selectedFile != null && autoScrollValue != null && imageCount >= 2
-                ? 'Cliquez pour valider'
-                : 'Veuillez sélectionner au moins deux fichiers et une option de défilement',
-            preferBelow: true,
-            margin: const EdgeInsets.all(13),
-            textStyle: const TextStyle(color: Colors.white),
-            decoration: BoxDecoration(
-              color: isButtonEnabled ? Colors.blue : Colors.grey,
-              borderRadius: BorderRadius.circular(8),
+          
+     
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 50),
+              backgroundColor: isButtonEnabled ? Colors.green : Colors.grey,
             ),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-                backgroundColor: isButtonEnabled ? Colors.green : Colors.grey,
-              ),
-              onPressed: isButtonEnabled
-                  ? () async {
-                      // Convertir les images sélectionnées en vidéo
-                      // Utilisez carouselProvider.images pour la conversion
-                      await convertImagesToVideo(carouselProvider.images);
-                      // testWritePermission(); // Décommenter si nécessaire
-                      // test(); // Décommenter si nécessaire
+            onPressed: isButtonEnabled
+                ? () async {
+                    await convertImagesToVideo(carouselProvider.images, videoTitle: "MaNouvelleVideo");
 
-                      Future.delayed(const Duration(milliseconds: 100), () {
-                        if (widget.scaffoldKey.currentState != null &&
-                            _selectedFile != null &&
-                            autoScrollValue != null) {
-                          widget.scaffoldKey.currentState!.openEndDrawer();
-                        }
-                      });
-                    }
-                  : null,
-              child: Text(
-                'Valider',
-                style: isButtonEnabled
-                    ? const TextStyle(color: Colors.white)
-                    : TextStyle(color: Colors.grey[600]),
-              ),
+                    Future.delayed(const Duration(milliseconds: 500), () {
+                      if (widget.scaffoldKey.currentState != null) {
+                        widget.scaffoldKey.currentState!.openEndDrawer();
+                      }
+                    });
+                  }
+                : null,
+            child: Text(
+              'Valider',
+              style: isButtonEnabled
+                  ? const TextStyle(color: Colors.white)
+                  : TextStyle(color: Colors.grey[600]),
             ),
           ),
+
         ],
       ),
     );

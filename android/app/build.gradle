@@ -1,5 +1,13 @@
+// Ces lignes DOIVENT être ajoutées au DÉBUT du fichier, avant le bloc 'plugins { ... }'.
+// Elles chargent les propriétés de votre clé depuis le fichier key.properties.
+
+
+
 plugins {
     id "com.android.application"
+    // START: FlutterFire Configuration
+    id 'com.google.gms.google-services'
+    // END: FlutterFire Configuration
     id "kotlin-android"
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
@@ -8,15 +16,22 @@ plugins {
 android {
     namespace = "com.example.caroussel"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973"
+
+    def keystorePropertiesFile = rootProject.file("key.properties")
+    def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+        coreLibraryDesugaringEnabled true
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = "17"
     }
 
     defaultConfig {
@@ -30,6 +45,15 @@ android {
         versionName = flutter.versionName
     }
 
+    // AJOUTEZ CE BLOC 'signingConfigs' ICI, AVANT 'buildTypes'.
+    signingConfigs {
+        release {
+            storeFile file(keystoreProperties.getProperty('storeFile'))
+            storePassword keystoreProperties.getProperty('storePassword')
+            keyAlias keystoreProperties.getProperty('keyAlias')
+            keyPassword keystoreProperties.getProperty('keyPassword')
+        }
+    }
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
@@ -41,4 +65,9 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Ajoute cette ligne :
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
 }

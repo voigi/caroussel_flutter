@@ -1,4 +1,7 @@
+import 'package:caroussel/notif.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart'; // Importez ce package
+import 'firebase_options.dart'; // Importez le fichier généré par FlutterFire
 import 'package:caroussel/media_uploader.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -8,25 +11,37 @@ import 'package:caroussel/drawer.dart'; // Correction de l'importation du drawer
 import 'dart:developer';
 import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_new/return_code.dart';
+import 'package:caroussel/utils.dart'; // Importation nécessaire pour requestNotificationPermission
+
 // Importation nécessaire si Carrousel utilise File.file pour afficher les images
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialisation de Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // Initialisation des notifications locales
+  await initNotifications();
+  await requestNotificationPermission(); // 🔔 gestion Android 13+
+
   // Verrouille l'orientation sur le mode portrait
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp, // Mode portrait vertical
-  ]).then((_) {
-    runApp(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (context) => CarouselProvider()),
-        ],
-        child: const MyApp(),
-      ),
-    );
-  });
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => CarouselProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
+
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -151,22 +166,25 @@ class _MyAppState extends State<MyApp> {
                     ],
                   ),
                   child: IntrinsicHeight( // Ajuste la hauteur du Column à son contenu
+ child: SingleChildScrollView( // Permet le défilement si le contenu dépasse la hauteur du Container parent
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center, // Centre le contenu du Column interne
+                      mainAxisAlignment: MainAxisAlignment.center, // Centre le contenu verticalement dans la zone visible si ça rentre
+                      mainAxisSize: MainAxisSize.min, // <--- AJOUT CRUCIAL : La colonne prend juste la hauteur nécessaire
                       children: [
                         const Text(
                           'Ajouter un Média',
                           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                         ),
+                        const SizedBox(height: 16), // Ajout d'un petit espace pour l'esthétique
                         MediaUploader(
                           scaffoldKey: _scaffoldKey,
-                         // imagePath: const [], // Ce paramètre est maintenant géré principalement par le Provider
-                          imageContainerCallback: _imageContainer, // Callback pour gérer la visibilité du carrousel
-                          selectValueCallback: _selectedValue, // Callback de MediaUploader (si utilisé)
-                          autoScrollValueCallback: autoScrollValue, // Callback pour le défilement automatique
+                          imageContainerCallback: _imageContainer,
+                          selectValueCallback: _selectedValue,
+                          autoScrollValueCallback: autoScrollValue,
                         ),
                       ],
                     ),
+                  ),
                   ),
                 ),
               ),
