@@ -5,7 +5,7 @@ import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 
 
 Future<String> generateVideo(List<String> imagePaths) async {
-  String outputFilePath = '/storage/emulated/0/Movies/user_carousel_video.mp4';
+  String outputFilePath = '/storage/emulated/0/Movies/';
 
   // Créer une liste de fichiers images sous forme de chaîne
   String images = imagePaths.map((path) => 'file:$path').join('|');

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="LaunchTheme" parent="Theme.SplashScreen">
+        <!-- Fond noir du splash -->
+        <item name="windowSplashScreenBackground">@color/black</item>
+        <!-- Image splash personnalisée (ton splash.png) -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash</item>
+        <!-- Fond transparent autour de l'icône (pas de cercle blanc par défaut) -->
+        <item name="windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
+        <!-- Thème normal à appliquer après le splash -->
+        <item name="postSplashScreenTheme">@style/NormalTheme</item>
+    </style>
+
+    <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">?android:colorBackground</item>
+    </style>
+</resources>

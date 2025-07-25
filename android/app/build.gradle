@@ -1,15 +1,7 @@
-// Ces lignes DOIVENT être ajoutées au DÉBUT du fichier, avant le bloc 'plugins { ... }'.
-// Elles chargent les propriétés de votre clé depuis le fichier key.properties.
-
-
-
 plugins {
     id "com.android.application"
-    // START: FlutterFire Configuration
     id 'com.google.gms.google-services'
-    // END: FlutterFire Configuration
     id "kotlin-android"
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
 }
 
@@ -18,11 +10,12 @@ android {
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 
+    // Ici, charge le fichier key.properties
     def keystorePropertiesFile = rootProject.file("key.properties")
     def keystoreProperties = new Properties()
-if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-}
+    if (keystorePropertiesFile.exists()) {
+        keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -35,17 +28,13 @@ if (keystorePropertiesFile.exists()) {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.caroussel"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdkVersion 24
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
-    // AJOUTEZ CE BLOC 'signingConfigs' ICI, AVANT 'buildTypes'.
     signingConfigs {
         release {
             storeFile file(keystoreProperties.getProperty('storeFile'))
@@ -54,11 +43,13 @@ if (keystorePropertiesFile.exists()) {
             keyPassword keystoreProperties.getProperty('keyPassword')
         }
     }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+            signingConfig signingConfigs.release
+        }
+        debug {
+            signingConfig signingConfigs.debug
         }
     }
 }
@@ -68,6 +59,6 @@ flutter {
 }
 
 dependencies {
-    // Ajoute cette ligne :
+    implementation "androidx.core:core-splashscreen:1.0.1"
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
 }

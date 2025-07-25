@@ -34,11 +34,33 @@ dependencies:
   flutter_local_notifications: ^19.3.0
   permission_handler: ^12.0.1
   android_intent_plus: ^5.3.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.6
+  splash_master: ^0.0.3
+  intro_slider: ^4.2.5
+  shared_preferences: ^2.5.3
+
+splash_master:
+  image: 'assets/icon/icon_dark.png'
+
+
+flutter_native_splash:
+  color: "#000000" # fond noir
+  image: assets/icon/icon_dark.png
+  android_gravity: center
+  fullscreen: true
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/icon_c.png"
+  adaptive_icon_background: "#FFFFFF" # ou "assets/icon/bg.png" si tu veux une image de fond
+  adaptive_icon_foreground: "assets/icon/icon_c.png"
 
   flutter_lints: ^2.0.0
 

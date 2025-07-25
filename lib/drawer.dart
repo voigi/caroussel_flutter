@@ -655,8 +655,11 @@ class _MyDrawerState extends State<MyDrawer> {
                         Navigator.of(stableContext, rootNavigator: true).pop();
 
                         if (videoUrl.isNotEmpty) {
+                          
+                          
+                          await showVideoSavedNotification(); // Initialiser les notifications si ce n'est pas déjà fait
+                          await Future.delayed(const Duration(seconds: 2));
                           optionModal(stableContext, videoUrl, videoTitle: videoTitle);
-                          showVideoSavedNotification(); // Initialiser les notifications si ce n'est pas déjà fait
 
                         } else {
                           ScaffoldMessenger.of(stableContext).showSnackBar(

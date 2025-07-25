@@ -8,7 +8,7 @@ import 'package:share_plus/share_plus.dart'; // Gardons pour le fallback ou "Aut
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:share_whatsapp_plus/share_whatsapp_plus.dart';
 import 'package:social_sharing_plus/social_sharing_plus.dart'; // NOUVEL IMPORT ICI
-import 'package:caroussel/notif.dart'; // Importation nécessaire pour openFileExplorer
+// Importation nécessaire pour openFileExplorer
 
 // La fonction qui affiche la modale principale (VideoPlayerModal)
 Future<void> optionModal(BuildContext context, String videoUrl, {String? videoTitle}) {

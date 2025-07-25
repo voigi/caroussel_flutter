@@ -15,6 +15,7 @@ class MediaUploader extends StatefulWidget {
   final void Function(List<String> imagePath) imageContainerCallback;
   final void Function(int) selectValueCallback;
   final void Function(int) autoScrollValueCallback;
+  final void Function() onValidation;
 
   const MediaUploader({
     super.key,
@@ -22,6 +23,7 @@ class MediaUploader extends StatefulWidget {
     required this.selectValueCallback,
     required this.autoScrollValueCallback,
     required this.scaffoldKey,
+    required this.onValidation,
   });
 
   @override
@@ -109,7 +111,7 @@ Future<String> getUniqueVideoPath(String baseTitle, String extension, Directory 
     if (!(await file.exists())) {
       return candidatePath;
     }
-    candidateTitle = '${baseTitle}($counter)';
+    candidateTitle = '$baseTitle($counter)';
     counter++;
   }
 }
@@ -186,8 +188,24 @@ Future<String> convertImagesToVideo(
     }
   }
 
-  final outputDir = Directory('/storage/emulated/0/Movies');
-  final outputVideoPath = await getUniqueVideoPath(videoTitle ?? 'video', '.mp4', outputDir);
+final outputDir = Directory('/storage/emulated/0/Movies');
+final videoNoSoundDir = Directory('/storage/emulated/0/Movies/NoAudio');
+
+if (!await outputDir.exists()) await outputDir.create(recursive: true);
+if (!await videoNoSoundDir.exists()) await videoNoSoundDir.create(recursive: true);
+
+// Vérifie si on a de l’audio ou non pour choisir le chemin de sortie
+final bool hasAudio = (audioSource != null && audioSource.isNotEmpty);
+
+final String outputVideoPath = await getUniqueVideoPath(
+  videoTitle ?? 'video',
+  '.mp4',
+  hasAudio ? outputDir : videoNoSoundDir,
+);
+  
+
+ // log('📽️ Chemin de sortie vidéo sans audio : $videoNoAudioPath');
+
 
   log('📽️ Chemin de sortie vidéo : $outputVideoPath');
 
@@ -230,7 +248,11 @@ Future<String> convertImagesToVideo(
     log('⚠️ Aucun chemin audio ou URL audio fourni. La vidéo n\'aura pas de son.');
   }
 
-  final videoNoAudioPath = '${tempDir.path}/{$videoTitle}video_no_audio.mp4';
+//si le dossier Movies/noAudio n'existe pas, on le crée
+ // final videoNoAudioPath = Directory('/storage/emulated/0/Movies/NoAudio');
+ 
+  //final videoNoAudioPath = Directory('/storage/emulated/0/Movies/NoAudio');
+     
 
   double durationPerImage = 5.0;
   double finalVideoDuration = 0.0;
@@ -259,7 +281,7 @@ Future<String> convertImagesToVideo(
   filterComplex += '${concatInputs}concat=n=${images.length}:v=1:a=0[outv]';
 
   String commandVideoOnly = '-y $imageInputStrings -filter_complex "$filterComplex" '
-      '-map "[outv]" -c:v libx264 -pix_fmt yuv420p -loglevel debug "$videoNoAudioPath"';
+      '-map "[outv]" -c:v libx264 -pix_fmt yuv420p -loglevel debug "$outputVideoPath"';
 
   log('🛠️ Commande FFmpeg pour vidéo seule : $commandVideoOnly');
   var session = await FFmpegKit.execute(commandVideoOnly);
@@ -273,43 +295,56 @@ Future<String> convertImagesToVideo(
   }
   log('✅ Vidéo sans audio créée avec succès.');
 
-  if (finalAudioFilePath != null && finalAudioFilePath.isNotEmpty) {
-    const double fadeOutDuration = 3.0;
-    final double fadeOutStartTime = finalVideoDuration - fadeOutDuration;
-    final double safeFadeOutStartTime = fadeOutStartTime > 0 ? fadeOutStartTime : 0.0;
+if (finalAudioFilePath != null && finalAudioFilePath.isNotEmpty) {
+  const double fadeOutDuration = 3.0;
+  final double fadeOutStartTime = finalVideoDuration - fadeOutDuration;
+  final double safeFadeOutStartTime = fadeOutStartTime > 0 ? fadeOutStartTime : 0.0;
 
-    String probeCommand = '-i "$finalAudioFilePath" -hide_banner';
-    log('🛠️ Commande FFprobe pour infos audio : $probeCommand');
-    var probeSession = await FFmpegKit.execute(probeCommand);
-    var probeLogs = await probeSession.getLogsAsString();
-    log('📜 Logs FFprobe audio:\n$probeLogs');
+  final tempWithAudioPath = '${tempDir.path}/video_with_audio_${DateTime.now().millisecondsSinceEpoch}.mp4';
 
-    String commandWithAudio = '-y -i "$videoNoAudioPath" -i "$finalAudioFilePath" '
-    '-filter_complex "' '[0:v]fade=t=out:st=$safeFadeOutStartTime:d=$fadeOutDuration[v_faded]; ' '[1:a]afade=t=out:st=$safeFadeOutStartTime:d=$fadeOutDuration[a_faded]" ' '-map "[v_faded]" -map "[a_faded]" ' '-c:v libx264 -preset veryfast -crf 26 -c:a aac -strict experimental ' '"$outputVideoPath"';
+  String commandWithAudio = '-y -i "$outputVideoPath" -i "$finalAudioFilePath" '
+      '-filter_complex "[0:v]fade=t=out:st=$safeFadeOutStartTime:d=$fadeOutDuration[v_faded]; '
+      '[1:a]afade=t=out:st=$safeFadeOutStartTime:d=$fadeOutDuration[a_faded]" '
+      '-map "[v_faded]" -map "[a_faded]" '
+      '-c:v libx264 -preset veryfast -crf 26 -c:a aac -strict experimental '
+      '"$tempWithAudioPath"';
 
-    log('🛠️ Commande FFmpeg pour ajout audio et fade out : $commandWithAudio');
-    session = await FFmpegKit.execute(commandWithAudio);
-    returnCode = await session.getReturnCode();
-    logs = await session.getLogsAsString();
-    log('📜 Logs ajout audio et fade out:\n$logs');
+  log('🛠️ Commande FFmpeg pour ajout audio et fade out : $commandWithAudio');
+  final session = await FFmpegKit.execute(commandWithAudio);
+  final returnCode = await session.getReturnCode();
+  final logs = await session.getLogsAsString();
+  log('📜 Logs ajout audio et fade out:\n$logs');
 
-    if (!ReturnCode.isSuccess(returnCode)) {
-      log('❌ Erreur lors de l’ajout de l’audio et du fade out. Code de retour: ${returnCode?.getValue()}');
-      return "";
-    }
-    log('✅ Vidéo finale avec audio et fade out créée avec succès à : $outputVideoPath');
+  if (!ReturnCode.isSuccess(returnCode)) {
+    log('❌ Erreur lors de l’ajout de l’audio et du fade out. Code: ${returnCode?.getValue()}');
+    return "";
+  }
+
+  log('✅ Vidéo avec audio générée temporairement à : $tempWithAudioPath');
+
+  // On écrase la vidéo finale sans audio par la version avec audio
+  try {
+    await File(tempWithAudioPath).copy(outputVideoPath);
+    log('✅ Vidéo finale avec audio écrite à : $outputVideoPath');
     return outputVideoPath;
-  } else {
-    log('⚠️ Pas d’audio préparé, on renvoie la vidéo sans audio. Aucun fade out appliqué.');
-    return videoNoAudioPath;
+  } catch (e) {
+    log('❌ Erreur lors de l’écriture finale de la vidéo avec audio : $e');
+    return "";
   }
 }
 
+  log('✅ Vidéo créée sans audio à : $outputVideoPath');
+  return outputVideoPath;
+  
+}
+
 class _MediaUploaderState extends State<MediaUploader> {
-  String? _selectedFile;
+  //String? _selectedFile;
   final _formKey = GlobalKey<FormState>();
   int? selectValue;
-  int? autoScrollValue;
+ // int? autoScrollValue;
+
+  
 
   Future<void> testWritePermission() async {
     final testFile = File('/storage/emulated/0/Download/test_permission.txt');
@@ -321,70 +356,73 @@ class _MediaUploaderState extends State<MediaUploader> {
     }
   }
 
-  Future<void> pickFile() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
-        allowMultiple: false,
-      );
+Future<void> pickFile() async {
+  try {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'png'],
+      allowMultiple: false,
+    );
 
-      if (result != null) {
-        List<String> newSelectedImages = result.files.map((file) => file.path!).toList();
+    final carouselProvider = context.read<CarouselProvider>();
 
-        final carouselProvider = context.read<CarouselProvider>();
-        List<String> currentProviderImages = List.from(carouselProvider.images);
-        currentProviderImages.addAll(newSelectedImages);
-        carouselProvider.setImages(currentProviderImages);
+    if (result != null) {
+      List<String> newSelectedImages = result.files.map((file) => file.path!).toList();
 
-        log('Images combinées pour le Provider: ${carouselProvider.images}');
-        log('Nombre d\'images dans le Provider: ${carouselProvider.images.length}');
+      // Ajout des nouvelles images au provider
+      List<String> currentProviderImages = List.from(carouselProvider.images);
+      currentProviderImages.addAll(newSelectedImages);
+      carouselProvider.setImages(currentProviderImages);
 
-        String? fileName = result.files.single.name;
-        log(fileName);
+      log('Images combinées pour le Provider: ${carouselProvider.images}');
+      log('Nombre d\'images dans le Provider: ${carouselProvider.images.length}');
 
-        String extension = fileName.substring(fileName.lastIndexOf('.'));
+      String? fileName = result.files.single.name;
+      log(fileName);
 
-        if (fileName.length > 20) {
-          fileName = '${fileName.substring(0, 10)} ...$extension';
-        }
+      String extension = fileName.substring(fileName.lastIndexOf('.'));
 
-        setState(() {
-          _selectedFile = 'fichier sélectionné: $fileName';
-        });
-
-        widget.imageContainerCallback(carouselProvider.images);
-        log('Callback called with: ${carouselProvider.images}');
-
-      } else {
-        setState(() {
-          _selectedFile = 'Aucun fichier sélectionné.';
-        });
+      if (fileName.length > 20) {
+        fileName = '${fileName.substring(0, 10)} ...$extension';
       }
-    } catch (e) {
-      log("Erreur lors de la sélection du fichier : $e");
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur lors de la sélection du fichier: $e')),
-        );
-      }
-      setState(() {
-        _selectedFile = 'Erreur lors de la sélection du fichier.';
-      });
+
+      // Met à jour dans le provider la chaîne affichée
+      carouselProvider.setSelectedFileLabel('fichier sélectionné: $fileName');
+
+      widget.imageContainerCallback(carouselProvider.images);
+      log('Callback called with: ${carouselProvider.images}');
+    } else {
+      // Pas de fichier sélectionné : on vide aussi la sélection dans le provider
+      carouselProvider.setSelectedFileLabel('Aucun fichier sélectionné.');
     }
+  } catch (e) {
+    log("Erreur lors de la sélection du fichier : $e");
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur lors de la sélection du fichier: $e')),
+      );
+    }
+    // En cas d'erreur, on met à jour aussi le provider
+    final carouselProvider = context.read<CarouselProvider>();
+    carouselProvider.setSelectedFileLabel('Erreur lors de la sélection du fichier.');
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
-    final carouselProvider = context.watch<CarouselProvider>();
+   final carouselProvider = context.watch<CarouselProvider>();
+   final selectFileLabel = carouselProvider.selectedFileLabel;
+   final autoScrollValue = carouselProvider.autoScrollValue;
     final int imageCount = carouselProvider.imageCount;
 
-    bool isButtonEnabled = _selectedFile != null &&
+    bool isButtonEnabled = selectFileLabel != null &&
         autoScrollValue != null &&
         imageCount >= 2;
     
     // Condition pour activer/désactiver le dropdown du défilement automatique
     bool canSelectScroll = imageCount >= 2;
-
+ log('autoScrollValue: $autoScrollValue, imageCount: $imageCount, _selectedFile: $selectFileLabel, isButtonEnabled: $isButtonEnabled, canSelectScroll: $canSelectScroll');
     return Form(
       key: _formKey,
       child: Column(
@@ -454,52 +492,51 @@ class _MediaUploaderState extends State<MediaUploader> {
             ],
           ),
           const SizedBox(height: 5),
-          DropdownButtonFormField<int>(
-            dropdownColor: Colors.white,
-           
-            decoration: const InputDecoration(
-              labelText: ' Oui/Non',
-              border: OutlineInputBorder(
-                  borderSide:
-                      BorderSide(color: Color.fromRGBO(13, 71, 161, 1))),
+          if (canSelectScroll)
+ DropdownButtonFormField<int>(
+  value: carouselProvider.autoScrollValue,
+  items: const [
+    DropdownMenuItem(value: 0, child: Text('Désactivé')),
+    DropdownMenuItem(value: 1, child: Text('Activé')),
+  ],
+  onChanged: (value) {
+    context.read<CarouselProvider>().updateAutoScrollValue(value);
+    widget.autoScrollValueCallback(value !);
+  
+    
+  }
+  ,
+  decoration: const InputDecoration(
+    border: OutlineInputBorder(),
+    labelText: 'Défilement Automatique',
+  ),
+)
+          else
+            const Text(
+              'Au moins 2 images sont nécessaires pour activer le défilement automatique.',
+              style: TextStyle(color: Colors.red),
             ),
-            value: autoScrollValue,
-            items: [
-              DropdownMenuItem(
-                value: 1,
-                child: Text(canSelectScroll ? 'Oui' : 'Indisponible'),
-              ),
-              DropdownMenuItem(
-                value: 2,
-                child: Text(canSelectScroll ? 'Non' : 'Indisponible'),
-              ),
-            ],
-            onChanged: canSelectScroll
-                ? (value) {
-                    setState(() {
-                      autoScrollValue = value;
-                      widget.autoScrollValueCallback(value!);
-                    });
-                  }
-                : null,
-          ),
           const SizedBox(height: 20),
           
-     
+        
+
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(double.infinity, 50),
+             
               backgroundColor: isButtonEnabled ? Colors.green : Colors.grey,
-            ),
+            ), 
             onPressed: isButtonEnabled
-                ? () async {
-                    await convertImagesToVideo(carouselProvider.images, videoTitle: "MaNouvelleVideo");
-
+                ?  () async {
+                   // await convertImagesToVideo(carouselProvider.images);
+                  widget.onValidation(); // Appel du callback pour activer le swipe
                     Future.delayed(const Duration(milliseconds: 500), () {
                       if (widget.scaffoldKey.currentState != null) {
                         widget.scaffoldKey.currentState!.openEndDrawer();
+                        
                       }
                     });
+                   
                   }
                 : null,
             child: Text(

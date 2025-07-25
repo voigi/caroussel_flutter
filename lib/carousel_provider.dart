@@ -7,6 +7,15 @@ class CarouselProvider with ChangeNotifier {
   int? _autoScrollValue;
    int _imageCount = 0; 
   int get imageCount => _imageCount;
+  bool _isContainerVisible = true;
+  bool get isContainerVisible => _isContainerVisible;
+  String? _selectedFileLabel;
+  String? get selectedFileLabel => _selectedFileLabel;
+
+  setSelectedFileLabel(String? label) {
+    _selectedFileLabel = label;
+    notifyListeners();
+  }
 
   List<String> get images => _images;
   int? get autoScrollValue => _autoScrollValue;
@@ -42,4 +51,9 @@ class CarouselProvider with ChangeNotifier {
     _autoScrollValue = value;
     notifyListeners();
   }
+  void setContainerVisible(bool visible) {
+  _isContainerVisible = visible;
+  notifyListeners();
 }
+}
+

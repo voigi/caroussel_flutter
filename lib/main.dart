@@ -12,6 +12,8 @@ import 'dart:developer';
 import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 import 'package:caroussel/utils.dart'; // Importation nécessaire pour requestNotificationPermission
+import 'package:caroussel/root_app.dart';
+import 'package:caroussel/guide.dart'; // Importation nécessaire pour OnBoardingPage
 
 // Importation nécessaire si Carrousel utilise File.file pour afficher les images
 
@@ -35,16 +37,19 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => CarouselProvider()),
+        ChangeNotifierProvider(create: (_) => CarouselProvider()),
+        // tu peux ajouter d'autres providers ici
       ],
-      child: const MyApp(),
-    ),
+      child: const RootApp(),
+  )
   );
+
 }
 
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  final bool showIntro;
+  const MyApp({super.key, required this.showIntro});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -55,6 +60,13 @@ class _MyAppState extends State<MyApp> {
   bool _isContainerVisible = false; // Contrôle la visibilité du widget Carrousel
   List<String>? _imagePath; // Contient les chemins des images sélectionnées
   int? _autoScrollValue; // Valeur du défilement automatique
+  bool swipeEnabled = false; // Contrôle si le swipe est activé
+
+  void activerSwipe() {
+    setState(() {
+      swipeEnabled = true; // Active le swipe
+    });
+  }
 
   Future<void> _checkFFmpegReady() async {
     log('Vérification si FFmpeg est prêt...');
@@ -102,7 +114,9 @@ class _MyAppState extends State<MyApp> {
     final int imageCount = carouselProvider.imageCount; // Récupère le nombre d'images
 
     return MaterialApp(
+     // navigatorKey: navigatorKey, // Utilise la clé de navigation globale
       home: Scaffold(
+        endDrawerEnableOpenDragGesture: swipeEnabled,
         key: _scaffoldKey,
         backgroundColor: Colors.white,
         appBar: AppBar(
@@ -116,6 +130,25 @@ class _MyAppState extends State<MyApp> {
             //   },
             // ),
             // Bouton invisible pour maintenir l'alignement à droite de l'AppBar.
+            IconButton(
+      icon: Icon(Icons.help_outline),
+      tooltip: "Revoir le guide",
+      onPressed: () {
+       Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => OnBoardingPage( 
+            onDone: () {
+              // Action à effectuer lorsque l'utilisateur termine le guide
+              Navigator.pop(context); // Ferme le guide
+            },
+            onSkip: () {
+              // Action à effectuer lorsque l'utilisateur saute le guide
+              Navigator.pop(context); // Ferme le guide
+            },
+          )),
+        );
+      },
+    ),
             const IconButton(onPressed: null, icon: Icon(Icons.search, color: Colors.transparent)),
           ],
         ),
@@ -124,10 +157,12 @@ class _MyAppState extends State<MyApp> {
           width: MediaQuery.of(context).size.width * 0.8, // Le tiroir occupe 80% de la largeur de l'écran
           child: MyDrawer(scaffoldKey: _scaffoldKey), // Passe la clé du Scaffold au MyDrawer
         ),
-        // `endDrawerEnableOpenDragGesture` est true par défaut, permettant l'ouverture par glissement.
+        //endDrawerEnableOpenDragGesture  est true par défaut, permettant l'ouverture par glissement.
         body: Column(
+
           mainAxisAlignment: MainAxisAlignment.center, // Centre verticalement le contenu principal
           children: [
+           // ElevatedButton(onPressed: showVideoSavedNotification, child: const Text('Afficher la notification')),
             const SizedBox(height: 30.0), // Espace en haut de la colonne
                           Carrousel(
                 // Si Carrousel a besoin de la liste d'images, passez-lui directement du Provider:
@@ -137,12 +172,14 @@ class _MyAppState extends State<MyApp> {
                 // Pour l'instant, on utilise la variable d'état locale de MyApp
                 autoScrollValue: _autoScrollValue,
               ),
-              if(_isContainerVisible && _imagePath != null && _imagePath!.isNotEmpty)
+ 
+
+              if(carouselProvider.isContainerVisible && carouselProvider.images.isNotEmpty ) 
                  Text(
               'Nombre d\'images sélectionnées : $imageCount',
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            
+              
             
                
             // Le conteneur "Ajouter un Média" (MediaUploader)
@@ -181,6 +218,7 @@ class _MyAppState extends State<MyApp> {
                           imageContainerCallback: _imageContainer,
                           selectValueCallback: _selectedValue,
                           autoScrollValueCallback: autoScrollValue,
+                          onValidation: activerSwipe, // Callback pour activer le swipe
                         ),
                       ],
                     ),

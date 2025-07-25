@@ -1,4 +1,3 @@
-
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
@@ -25,11 +24,12 @@ Future<void> initNotifications() async {
   );
 }
 
-// ouverture de l'explorateur de fichiers
+// 📂 Ouvre le dossier Movies du téléphone
 Future<void> openFileExplorer() async {
   final intent = AndroidIntent(
     action: 'android.intent.action.VIEW',
-    data: 'content://com.android.externalstorage.documents/document/primary%3AMovies',
+    data:
+        'content://com.android.externalstorage.documents/document/primary%3AMovies',
     package: 'com.android.documentsui',
     flags: <int>[
       Flag.FLAG_ACTIVITY_NEW_TASK,
@@ -38,8 +38,6 @@ Future<void> openFileExplorer() async {
 
   await intent.launch();
 }
-
-
 
 Future<void> showVideoSavedNotification() async {
   const AndroidNotificationDetails androidPlatformChannelSpecifics =
@@ -51,6 +49,7 @@ Future<void> showVideoSavedNotification() async {
     priority: Priority.high,
     sound: RawResourceAndroidNotificationSound('notif'), // sans extension
     playSound: true,
+    largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
   );
 
   const NotificationDetails platformChannelSpecifics =
@@ -58,9 +57,9 @@ Future<void> showVideoSavedNotification() async {
 
   await flutterLocalNotificationsPlugin.show(
     0,
-    'Vidéo enregistrée',
-    'Vidéo enregistrée dans le dossier Movies',
+    '▶️ Vidéo prête',
+    'Touchez ici pour l’ouvrir',
     platformChannelSpecifics,
-    payload: 'openFiles', // utile pour détecter le clic
+    payload: 'openFiles',
   );
 }
