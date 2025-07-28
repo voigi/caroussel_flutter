@@ -23,10 +23,10 @@ L’utilisateur peut **modifier ou supprimer une image** dans le carrousel via d
 ### 5. Ajout de fond sonore
 L'utilisateur peut **ajouter un fond sonore** à son carrousel, soit à partir de ses fichiers personnels, soit en choisissant un son dans une bibliothèque intégrée à l’application.
 
-### 6. Aperçu avant validation (en cours de développement)
+### 6. Aperçu avant validation 
 Une fois la mise en forme finalisée, l’utilisateur pourra **prévisualiser** le résultat avant de confirmer le téléchargement ou le partage (par SMS ou via les réseaux sociaux).
 
-### 7. Génération de la vidéo (en cours de développement)
+### 7. Génération de la vidéo 
 Une fois le carrousel validé, l’application **génère une vidéo** à partir des images et du son choisis par l'utilisateur. Cette vidéo peut être partagée sur différentes plateformes.
 
 
