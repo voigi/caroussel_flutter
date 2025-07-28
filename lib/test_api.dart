@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:developer';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 
-
- const apiKeytest ='BnTMdvUVteCn8xR13DR7r82iBdpATBZoKQYpGMYW';
+final String apiKeytest = dotenv.env['FREESOUND_API_KEY']!;
 
 Future<List<dynamic>> fetchData({String keyword = 'background'}) async {
   log('Appel API FreeSound avec le mot-clé: $keyword');

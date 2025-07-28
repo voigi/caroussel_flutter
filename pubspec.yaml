@@ -39,6 +39,8 @@ dependencies:
   splash_master: ^0.0.3
   intro_slider: ^4.2.5
   shared_preferences: ^2.5.3
+  google_fonts: ^6.2.1
+  flutter_dotenv: ^5.2.1
 
 splash_master:
   image: 'assets/icon/icon_dark.png'
@@ -70,8 +72,12 @@ flutter:
   # --- DÉBUT DES AJOUTS ---
   # Déclare le dossier 'assets/fonts/' pour que Flutter inclue les fichiers qu'il contient
   assets:
+    - .env
     - assets/fonts/
     - assets/sounds/
+    - assets/icon/
+    - assets/images/
+
 
   # Déclare la police spécifique pour qu'elle soit reconnue par l'application
   fonts:

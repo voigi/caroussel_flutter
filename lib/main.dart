@@ -1,11 +1,13 @@
 import 'package:caroussel/notif.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart'; // Importez ce package
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart'; // Importez le fichier généré par FlutterFire
 import 'package:caroussel/media_uploader.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'carousel_provider.dart';
+import 'drawer_settings_provider.dart';
 import 'package:caroussel/carrousel.dart';
 import 'package:caroussel/drawer.dart'; // Correction de l'importation du drawer
 import 'dart:developer';
@@ -19,6 +21,8 @@ import 'package:caroussel/guide.dart'; // Importation nécessaire pour OnBoardin
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await dotenv.load(fileName: ".env"); // Charge les variables d'environnement depuis le fichier .env
 
   // Initialisation de Firebase
   await Firebase.initializeApp(
@@ -38,6 +42,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => CarouselProvider()),
+        ChangeNotifierProvider(create: (_) => DrawerSettingsProvider()), // Ajout du provider pour les paramètres du tiroir
         // tu peux ajouter d'autres providers ici
       ],
       child: const RootApp(),
@@ -119,39 +124,31 @@ class _MyAppState extends State<MyApp> {
         endDrawerEnableOpenDragGesture: swipeEnabled,
         key: _scaffoldKey,
         backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.cyan[700],
-          title: const Center(child: Text('Mon Carrousel', style: TextStyle(color: Colors.white))),
-          actions: [
-            // IconButton(
-            //   icon: const Icon(Icons.settings, color: Colors.white),
-            //   onPressed: () {
-            //     _scaffoldKey.currentState?.openEndDrawer(); // Ouvre le tiroir
-            //   },
-            // ),
-            // Bouton invisible pour maintenir l'alignement à droite de l'AppBar.
-            IconButton(
+appBar: AppBar(
+  backgroundColor: Colors.cyan[700],
+  title: const Text('Mon Carrousel', style: TextStyle(color: Colors.white)),
+  centerTitle: true, // Ceci va centrer le titre
+  actions: [
+    IconButton(
       icon: Icon(Icons.help_outline),
       tooltip: "Revoir le guide",
       onPressed: () {
        Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => OnBoardingPage( 
+          MaterialPageRoute(builder: (_) => OnBoardingPage(
             onDone: () {
-              // Action à effectuer lorsque l'utilisateur termine le guide
-              Navigator.pop(context); // Ferme le guide
+              Navigator.pop(context);
             },
             onSkip: () {
-              // Action à effectuer lorsque l'utilisateur saute le guide
-              Navigator.pop(context); // Ferme le guide
+              Navigator.pop(context);
             },
           )),
         );
       },
     ),
-            const IconButton(onPressed: null, icon: Icon(Icons.search, color: Colors.transparent)),
-          ],
-        ),
+    const IconButton(onPressed: null, icon: Icon(Icons.search, color: Colors.transparent)),
+  ],
+),
         // Le tiroir de fin de Scaffold, qui contient les paramètres.
         endDrawer: SizedBox(
           width: MediaQuery.of(context).size.width * 0.8, // Le tiroir occupe 80% de la largeur de l'écran
@@ -170,7 +167,7 @@ class _MyAppState extends State<MyApp> {
                 // Si Carrousel a besoin de la valeur de défilement du Provider:
                 // autoScrollValue: carouselProvider.autoScrollValue,
                 // Pour l'instant, on utilise la variable d'état locale de MyApp
-                autoScrollValue: _autoScrollValue,
+                //autoScrollValue: _autoScrollValue,
               ),
  
 
@@ -217,7 +214,7 @@ class _MyAppState extends State<MyApp> {
                           scaffoldKey: _scaffoldKey,
                           imageContainerCallback: _imageContainer,
                           selectValueCallback: _selectedValue,
-                          autoScrollValueCallback: autoScrollValue,
+                          //autoScrollValueCallback: autoScrollValue,
                           onValidation: activerSwipe, // Callback pour activer le swipe
                         ),
                       ],

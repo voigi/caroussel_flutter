@@ -7,7 +7,7 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 
 Future<void> initNotifications() async {
   const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
+      AndroidInitializationSettings('@drawable/icon_bw');
 
   final InitializationSettings initializationSettings = InitializationSettings(
     android: initializationSettingsAndroid,
@@ -49,7 +49,7 @@ Future<void> showVideoSavedNotification() async {
     priority: Priority.high,
     sound: RawResourceAndroidNotificationSound('notif'), // sans extension
     playSound: true,
-    largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+   // largeIcon: DrawableResourceAndroidBitmap('icon_bw'),
   );
 
   const NotificationDetails platformChannelSpecifics =
@@ -57,7 +57,7 @@ Future<void> showVideoSavedNotification() async {
 
   await flutterLocalNotificationsPlugin.show(
     0,
-    '▶️ Vidéo prête',
+    '▶️ Vidéo prète',
     'Touchez ici pour l’ouvrir',
     platformChannelSpecifics,
     payload: 'openFiles',

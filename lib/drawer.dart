@@ -1,20 +1,24 @@
 // Fichier : my_drawer.dart
 
-import 'package:caroussel/notif.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:caroussel/option_modal.dart';
-import 'carousel_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:caroussel/media_uploader.dart'; // Assurez-vous que convertImagesToVideo est bien là
-import 'dart:developer';
-import 'package:audioplayers/audioplayers.dart';
-import 'package:collection/collection.dart';
-import 'package:caroussel/test_api.dart'; // Assurez-vous que fetchData et getSoundDownloadUrl sont là
+import 'dart:developer'; // Pour les logs
+// Import pour SchedulerBinding
 
-// Assurez-vous que cette fonction est bien importée ou définie globalement si elle est utilisée ici
-// Si elle est dans media_uploader.dart, assurez-vous de l'importer correctement
-// import 'package:caroussel/media_uploader.dart'; // Importez le fichier qui contient convertImagesToVideo
+// Tes imports locaux
+import 'package:caroussel/notif.dart';
+import 'package:caroussel/option_modal.dart';
+import 'package:caroussel/media_uploader.dart';
+import 'package:caroussel/test_api.dart';
+
+// Tes Providers
+import 'carousel_provider.dart';
+import 'drawer_settings_provider.dart';
+
+// Pour la lecture audio
+import 'package:audioplayers/audioplayers.dart';
+import 'package:collection/collection.dart'; // Pour firstWhereOrNull
 
 class MyDrawer extends StatefulWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
@@ -25,15 +29,14 @@ class MyDrawer extends StatefulWidget {
 }
 
 class _MyDrawerState extends State<MyDrawer> {
-  String? _audioFileName;
-  String? _audioFilePath;
-  String? _selectedMusic;
-  bool _isDropdownDisabled = false;
-  bool _isFilePickerDisabled = false;
-  List _data = [];
+  // --- VARIABLES D'ÉTAT LOCALES QUI RESTENT DANS LE WIDGET ---
+  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  final TextEditingController _searchController = TextEditingController(text: 'background');
-  String _searchKeyword = 'background';
+  bool _isTitleValid = false;
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  bool _isPlaying = false;
 
   final List<String> _suggestedKeywords = [
     'Ambiance',
@@ -41,22 +44,29 @@ class _MyDrawerState extends State<MyDrawer> {
     'Effet',
   ];
 
-  // --- NOUVEAU : GlobalKey pour le formulaire du titre ---
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  final TextEditingController _titleController = TextEditingController();
-  // --- NOUVEAU : Variable pour suivre l'état de validation du titre ---
-  bool _isTitleValid = false; // Initialisé à false, car le champ est vide au démarrage
-
-  final AudioPlayer _audioPlayer = AudioPlayer();
-  bool _isPlaying = false;
-
-  bool _isAudioOptionsExpanded = false;
-
   @override
   void initState() {
     super.initState();
-    _performApiSearch();
+    final drawerSettingsProvider = context.read<DrawerSettingsProvider>();
+
+    // Initialise les contrôleurs de texte avec les valeurs du provider
+    _searchController.text = drawerSettingsProvider.searchKeyword;
+    _titleController.text = drawerSettingsProvider.videoTitle;
+
+    // Diffère la récupération API et la validation du titre après le premier frame.
+    // Cela assure que le widget est monté et que les préférences sont chargées.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (mounted) { // S'assurer que le widget est toujours monté
+        // Charger les préférences (si ce n'est pas déjà fait au démarrage de l'app)
+       // await drawerSettingsProvider.loadPreferences();
+
+        // Effectuer la recherche API initiale en utilisant le mot-clé des préférences
+        _performApiSearch(drawerSettingsProvider.searchKeyword);
+        _validateTitleOnChanged(); // Valider le titre après le chargement des préférences
+      }
+    });
+
+    // Écoute les changements d'état du lecteur audio
     _audioPlayer.onPlayerStateChanged.listen((PlayerState state) {
       if (mounted) {
         setState(() {
@@ -64,57 +74,84 @@ class _MyDrawerState extends State<MyDrawer> {
         });
       }
     });
-    // --- NOUVEAU : Écouter les changements dans le contrôleur de titre ---
+
+    // Ajoute un écouteur pour valider le titre en temps réel
     _titleController.addListener(_validateTitleOnChanged);
-    // Valider une première fois au démarrage si le champ a une valeur initiale
-    _validateTitleOnChanged(); // Pour initialiser _isTitleValid
   }
 
   @override
   void dispose() {
-    _audioPlayer.dispose();
-    _searchController.dispose();
-    // --- NOUVEAU : Retirer le listener et disposer du contrôleur de titre ---
+    _audioPlayer.dispose(); // Libère les ressources du lecteur audio
+
+    // Supprime l'écouteur AVANT de disposer le contrôleur
     _titleController.removeListener(_validateTitleOnChanged);
+
+    // Dispose des contrôleurs de texte
+    _searchController.dispose();
     _titleController.dispose();
+
     super.dispose();
   }
 
-  // --- NOUVELLE FONCTION : Valider le titre à chaque changement ---
+  // --- FONCTIONS DE GESTION DES ACTIONS ---
+
   void _validateTitleOnChanged() {
+    // Met à jour l'état de validité du titre
     setState(() {
       _isTitleValid = _titleController.text.trim().isNotEmpty;
     });
   }
 
-  void _performApiSearch() async {
-    _stopAudio();
-    _selectedMusic = null;
-    _isDropdownDisabled = false;
-    _isFilePickerDisabled = false;
+  void _performApiSearch(String keyword) async {
+    final drawerSettingsProvider = context.read<DrawerSettingsProvider>();
+    _stopAudio(); // Arrête tout audio en cours
 
-    setState(() {
-      _searchKeyword = _searchController.text.trim().isEmpty ? 'background' : _searchController.text.trim();
-    });
+    // IMPORTANT : Ne PAS réinitialiser selectedMusic ici.
+    // Cela écraserait la valeur potentiellement chargée des préférences.
+    // drawerSettingsProvider.setSelectedMusic(null); // <-- Ligne supprimée ou commentée
+
+    drawerSettingsProvider.setIsDropdownDisabled(false);
+    drawerSettingsProvider.setIsFilePickerDisabled(false);
+
+    // Définir le mot-clé de recherche dans le provider
+    drawerSettingsProvider.setSearchKeyword(keyword.trim().isEmpty ? 'background' : keyword.trim());
 
     try {
-      var fetchedData = await fetchData(keyword: _searchKeyword);
-      setState(() {
-        _data = fetchedData;
-      });
-      log('Données API récupérées avec succès pour le mot-clé "$_searchKeyword": $_data');
+      // Récupérer les données de l'API
+      var fetchedData = await fetchData(keyword: drawerSettingsProvider.searchKeyword);
+      drawerSettingsProvider.setApiSoundData(fetchedData); // Met à jour les données API dans le provider
+
+      log('Données API récupérées avec succès pour le mot-clé "${drawerSettingsProvider.searchKeyword}": ${fetchedData.length} éléments');
+
+      // Après avoir récupéré et mis à jour les données API,
+      // vérifier si la musique précédemment sélectionnée (via les préférences)
+      // est toujours valide dans la nouvelle liste de données.
+      if (drawerSettingsProvider.selectedMusic != null &&
+          !fetchedData.any((item) => item['name'] == drawerSettingsProvider.selectedMusic)) {
+        // Si le son sélectionné n'est plus dans les nouvelles données, le réinitialiser.
+        drawerSettingsProvider.setSelectedMusic(null);
+        log('Ancien son sélectionné "${drawerSettingsProvider.selectedMusic}" n\'est plus disponible dans les nouvelles données API. Réinitialisé.');
+      } else if (drawerSettingsProvider.selectedMusic != null) {
+        // Si le son est toujours valide, désactiver le sélecteur de fichier local
+        // pour indiquer que le son API est actif.
+        drawerSettingsProvider.setIsFilePickerDisabled(true); // Désactive le sélecteur de fichier
+        drawerSettingsProvider.setIsDropdownDisabled(false); // Laisser le dropdown actif
+        log('Ancien son sélectionné "${drawerSettingsProvider.selectedMusic}" est toujours disponible.');
+      }
+
     } catch (e) {
-      log('Erreur lors de la récupération des données API pour le mot-clé "$_searchKeyword": $e');
+      log('Erreur lors de la récupération des données API pour le mot-clé "${drawerSettingsProvider.searchKeyword}": $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Erreur lors de la récupération des sons pour '$_searchKeyword'.")),
+          SnackBar(content: Text("Erreur lors de la récupération des sons pour '${drawerSettingsProvider.searchKeyword}'.")),
         );
       }
     }
   }
 
   void _pickAudioFile() async {
-    if (_isFilePickerDisabled) return;
+    final drawerSettingsProvider = context.read<DrawerSettingsProvider>();
+    if (drawerSettingsProvider.isFilePickerDisabled) return;
 
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -123,33 +160,33 @@ class _MyDrawerState extends State<MyDrawer> {
     );
 
     if (result != null) {
-      setState(() {
-        _audioFilePath = result.files.single.path;
-        _audioFileName = result.files.single.name;
-        _selectedMusic = null;
-        _isDropdownDisabled = true;
-        _isFilePickerDisabled = false;
-      });
+      drawerSettingsProvider.setAudioFilePath(result.files.single.path);
+      drawerSettingsProvider.setAudioFileName(result.files.single.name);
+      drawerSettingsProvider.setSelectedMusic(null); // Annule la sélection API
+      drawerSettingsProvider.setIsDropdownDisabled(true); // Désactive le sélecteur API
+      drawerSettingsProvider.setIsFilePickerDisabled(false); // Reste activé pour le sélecteur local
       _stopAudio();
-      log("Fichier local sélectionné : $_audioFilePath");
+      log("Fichier local sélectionné : ${drawerSettingsProvider.audioFilePath}");
     }
   }
 
   Future<void> _playAudio() async {
+    final drawerSettingsProvider = context.read<DrawerSettingsProvider>();
+
     if (_isPlaying) {
       await _audioPlayer.pause();
-      setState(() {
-        _isPlaying = false;
-      });
+      if (mounted) {
+        setState(() { _isPlaying = false; });
+      }
       return;
     }
 
-    if (_audioFilePath != null) {
-      await _audioPlayer.play(DeviceFileSource(_audioFilePath!));
-      log('Lecture audio locale depuis : $_audioFilePath');
-    } else if (_selectedMusic != null) {
-      final Map<String, dynamic>? selectedItem = _data.firstWhereOrNull(
-        (item) => item['name'] == _selectedMusic,
+    if (drawerSettingsProvider.audioFilePath != null) {
+      await _audioPlayer.play(DeviceFileSource(drawerSettingsProvider.audioFilePath!));
+      log('Lecture audio locale depuis : ${drawerSettingsProvider.audioFilePath}');
+    } else if (drawerSettingsProvider.selectedMusic != null) {
+      final Map<String, dynamic>? selectedItem = drawerSettingsProvider.apiSoundData.firstWhereOrNull(
+        (item) => item['name'] == drawerSettingsProvider.selectedMusic,
       );
 
       if (selectedItem != null) {
@@ -167,7 +204,7 @@ class _MyDrawerState extends State<MyDrawer> {
           }
         }
       } else {
-        log('Aucun élément correspondant trouvé pour la musique sélectionnée: $_selectedMusic');
+        log('Aucun élément correspondant trouvé pour la musique sélectionnée: ${drawerSettingsProvider.selectedMusic}');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Le son sélectionné n'est plus disponible")),
@@ -182,33 +219,37 @@ class _MyDrawerState extends State<MyDrawer> {
         );
       }
     }
+    if (mounted) {
+      setState(() { _isPlaying = true; });
+    }
   }
 
   void _stopAudio() async {
     await _audioPlayer.stop();
-    setState(() {
-      _isPlaying = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isPlaying = false;
+      });
+    }
   }
 
   void _resetAudioChoices() {
     _stopAudio();
-    setState(() {
-      _audioFileName = null;
-      _audioFilePath = null;
-      _selectedMusic = null;
-      _isDropdownDisabled = false;
-      _isFilePickerDisabled = false;
-      _searchController.text = 'background';
-      _titleController.clear();
-      _performApiSearch();
-      _isTitleValid = false; // Réinitialiser la validation du titre
-    });
+    final drawerSettingsProvider = context.read<DrawerSettingsProvider>();
+    drawerSettingsProvider.resetAllDrawerOptions();
+    // Met à jour les contrôleurs de texte avec les valeurs réinitialisées du provider
+    _searchController.text = drawerSettingsProvider.searchKeyword;
+    _titleController.text = drawerSettingsProvider.videoTitle;
+    _validateTitleOnChanged(); // Re-valide le titre
+    _performApiSearch(drawerSettingsProvider.searchKeyword); // Recharge les sons API
   }
 
+  // --- WIDGETS DE CONSTRUCTION D'UI ---
+
   Widget _buildAudioControlsSection() {
+    final drawerSettingsProvider = context.watch<DrawerSettingsProvider>();
     String displayText;
-    bool isAudioSelected = (_audioFileName != null || _selectedMusic != null);
+    bool isAudioSelected = (drawerSettingsProvider.audioFileName != null || drawerSettingsProvider.selectedMusic != null);
 
     if (isAudioSelected) {
       displayText = "Son sélectionné : ";
@@ -239,7 +280,7 @@ class _MyDrawerState extends State<MyDrawer> {
               if (isAudioSelected)
                 Expanded(
                   child: Text(
-                    _audioFileName ?? _selectedMusic!,
+                    drawerSettingsProvider.audioFileName ?? drawerSettingsProvider.selectedMusic!,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -298,25 +339,31 @@ class _MyDrawerState extends State<MyDrawer> {
 
   @override
   Widget build(BuildContext context) {
-    List<String> selectedImages = context.watch<CarouselProvider>().images;
+    final carouselProvider = context.watch<CarouselProvider>();
+    final drawerSettingsProvider = context.watch<DrawerSettingsProvider>();
+
+    List<String> selectedImages = carouselProvider.images;
 
     String selectedAudioSummaryText;
-    bool isAudioSelectedForSummary = (_audioFileName != null || _selectedMusic != null);
+    bool isAudioSelectedForSummary = (drawerSettingsProvider.audioFileName != null || drawerSettingsProvider.selectedMusic != null);
 
-    if (_audioFileName != null && _audioFilePath != null) {
-      selectedAudioSummaryText = _audioFileName!;
-    } else if (_selectedMusic != null) {
-      selectedAudioSummaryText = _selectedMusic!;
+    if (drawerSettingsProvider.audioFileName != null && drawerSettingsProvider.audioFilePath != null) {
+      selectedAudioSummaryText = drawerSettingsProvider.audioFileName!;
+    } else if (drawerSettingsProvider.selectedMusic != null) {
+      selectedAudioSummaryText = drawerSettingsProvider.selectedMusic!;
     } else {
       selectedAudioSummaryText = 'Aucun son sélectionné';
     }
 
-    // --- NOUVEAU : Condition d'activation du bouton "Créer l'Aperçu" ---
-    // Le bouton est activé si:
-    // - Il y a au moins 2 images sélectionnées
-    // - Le champ de titre n'est pas vide (_isTitleValid est true)
-    bool isCreatePreviewButtonEnabled = selectedImages.length >= 2 && _isTitleValid;
+    // Déterminer si le son sélectionné du provider est réellement dans la liste `apiSoundData` actuelle.
+    // Si ce n'est pas le cas, définir explicitement la valeur du sélecteur à null pour éviter les erreurs.
+    String? dropdownValue = drawerSettingsProvider.selectedMusic;
+    if (dropdownValue != null &&
+        !drawerSettingsProvider.apiSoundData.any((item) => item['name'] == dropdownValue)) {
+      dropdownValue = null;
+    }
 
+    bool isCreatePreviewButtonEnabled = selectedImages.length >= 2 && _isTitleValid;
 
     return Drawer(
       child: ListView(
@@ -355,11 +402,9 @@ class _MyDrawerState extends State<MyDrawer> {
 
           ExpansionTile(
             key: const PageStorageKey('audioOptions'),
-            initiallyExpanded: _isAudioOptionsExpanded,
+            initiallyExpanded: drawerSettingsProvider.isAudioOptionsExpanded,
             onExpansionChanged: (bool expanded) {
-              setState(() {
-                _isAudioOptionsExpanded = expanded;
-              });
+              drawerSettingsProvider.setIsAudioOptionsExpanded(expanded);
             },
             title: const Text('Options Audio'),
             leading: const Padding(
@@ -380,11 +425,11 @@ class _MyDrawerState extends State<MyDrawer> {
                   title: Text(
                     "Parcourir un fichier audio",
                     style: TextStyle(
-                      color: _isFilePickerDisabled ? Colors.grey : Colors.black,
+                      color: drawerSettingsProvider.isFilePickerDisabled ? Colors.grey : Colors.black,
                     ),
                   ),
-                  enabled: !_isFilePickerDisabled,
-                  onTap: _isFilePickerDisabled ? null : _pickAudioFile,
+                  enabled: !drawerSettingsProvider.isFilePickerDisabled,
+                  onTap: drawerSettingsProvider.isFilePickerDisabled ? null : _pickAudioFile,
                 ),
               ),
 
@@ -419,7 +464,7 @@ class _MyDrawerState extends State<MyDrawer> {
                           ),
                           onPressed: () {
                             _searchController.text = keyword;
-                            _performApiSearch();
+                            _performApiSearch(keyword);
                           },
                         );
                       }).toList(),
@@ -431,7 +476,8 @@ class _MyDrawerState extends State<MyDrawer> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
                 child: DropdownButtonFormField<String>(
-                  value: _selectedMusic,
+                  // Utilise la valeur 'dropdownValue' vérifiée pour la cohérence
+                  value: dropdownValue,
                   dropdownColor: Colors.white,
                   hint: const Row(
                     children: [
@@ -449,34 +495,37 @@ class _MyDrawerState extends State<MyDrawer> {
                         borderSide:
                             BorderSide(color: Color.fromRGBO(13, 71, 161, 1))),
                   ),
-                  items: _data.map<DropdownMenuItem<String>>((item) {
+                  items: drawerSettingsProvider.apiSoundData.map<DropdownMenuItem<String>>((item) {
                     return DropdownMenuItem<String>(
                       value: item['name'],
                       child: Text(item['name']),
                     );
                   }).toList(),
-                  onChanged: _isDropdownDisabled
+                  onChanged: drawerSettingsProvider.isDropdownDisabled
                       ? null
-                      : (value) {
-                          setState(() {
-                            _selectedMusic = value;
-                            _audioFileName = null;
-                            _audioFilePath = null;
-                            _isFilePickerDisabled = true;
-                            _isDropdownDisabled = false;
-                          });
+                      : (String? value) { // Assure que la valeur est `String?`
+                          drawerSettingsProvider.setSelectedMusic(value);
+                          drawerSettingsProvider.setAudioFileName(null);
+                          drawerSettingsProvider.setAudioFilePath(null);
+                          drawerSettingsProvider.setIsFilePickerDisabled(true); // Désactive le sélecteur de fichier
+                          drawerSettingsProvider.setIsDropdownDisabled(false); // Garde le dropdown activé
                           _stopAudio();
-                          log("Musique sélectionnée depuis l'API: $_selectedMusic");
-                        },
+                          log("Musique sélectionnée depuis l'API: ${drawerSettingsProvider.selectedMusic}");
+                        }, // The returned type 'Text' isn't returnable from a 'List<Widget>' function, as required by the closure's context.
                   selectedItemBuilder: (BuildContext context) {
-                    return _data.map<Widget>((item) {
-                      String text = item['name'].length > 20
-                          ? '${item['name'].substring(0, 20)}...'
-                          : item['name'];
-                      return Text(
-                        text,
-                        overflow: TextOverflow.ellipsis,
+                    return drawerSettingsProvider.apiSoundData.map<Widget>((item) {
+                      if (dropdownValue == null) {
+                        return const Text(''); // Ou ton texte d'indication si préféré
+                      }
+                      final selectedItem = drawerSettingsProvider.apiSoundData.firstWhereOrNull(
+                            (item) => item['name'] == dropdownValue,
                       );
+                      String text = selectedItem != null
+                          ? (selectedItem['name'].length > 20
+                          ? '${selectedItem['name'].substring(0, 20)}...'
+                          : selectedItem['name'])
+                          : ''; // Repli si l'élément sélectionné n'est pas trouvé
+                      return Text(text, overflow: TextOverflow.ellipsis);
                     }).toList();
                   },
                 ),
@@ -484,36 +533,19 @@ class _MyDrawerState extends State<MyDrawer> {
 
               _buildAudioControlsSection(),
 
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-                child: ElevatedButton.icon(
-                  onPressed: _resetAudioChoices,
-                  icon: const Icon(Icons.restart_alt),
-                  label: const Text("J’annule mon choix"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[200],
-                    foregroundColor: Colors.black87,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: Colors.grey.shade400),
-                    ),
-                  ),
-                ),
-              ),
+             
               const SizedBox(height: 10),
             ],
           ),
 
-          // --- Section "Titre de la Vidéo" avec Form et TextFormField ---
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
             child: Form(
-              key: _formKey, // --- ASSIGNEZ LA CLÉ DU FORMULAIRE ICI ---
+              key: _formKey,
               child: TextFormField(
                 controller: _titleController,
                 decoration: InputDecoration(
-                  labelText: 'Titre de la vidéo', // Retire "(optionnel)" car il est obligatoire
+                  labelText: 'Titre de la vidéo',
                   hintText: 'Ex: "Mes vacances d\'été"',
                   prefixIcon: const Icon(Icons.edit),
                   border: OutlineInputBorder(
@@ -524,26 +556,27 @@ class _MyDrawerState extends State<MyDrawer> {
                           icon: const Icon(Icons.clear),
                           onPressed: () {
                             _titleController.clear();
-                            _validateTitleOnChanged(); // Re-valide après effacement
+                            drawerSettingsProvider.setVideoTitle('');
+                            _validateTitleOnChanged();
                           },
                         )
                       : null,
                 ),
                 validator: (String? value) {
-                  if (value == null || value.trim().isEmpty) { // Vérifie aussi les espaces blancs
-                    return 'Le titre de la vidéo est obligatoire.'; // Message d'erreur
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Le titre de la vidéo est obligatoire.';
                   }
                   return null;
                 },
                 onChanged: (value) {
-                  _validateTitleOnChanged(); // Met à jour l'état de validation du titre
+                  drawerSettingsProvider.setVideoTitle(value);
+                  _validateTitleOnChanged();
                 },
               ),
             ),
           ),
           const Divider(),
 
-          // --- Section : Récapitulatif des options sélectionnées AVEC CONTRÔLES AUDIO ---
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
             child: Column(
@@ -559,7 +592,7 @@ class _MyDrawerState extends State<MyDrawer> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Titre sélectionné : ${_titleController.text.isNotEmpty ? _titleController.text : 'Non défini'}',
+                  'Titre sélectionné : ${drawerSettingsProvider.videoTitle.isNotEmpty ? drawerSettingsProvider.videoTitle : 'Non défini'}',
                   style: const TextStyle(fontSize: 15),
                 ),
                 const SizedBox(height: 4),
@@ -583,29 +616,44 @@ class _MyDrawerState extends State<MyDrawer> {
               ],
             ),
           ),
+           Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+                child: ElevatedButton.icon(
+                  onPressed: _resetAudioChoices,
+                  icon: const Icon(Icons.restart_alt),
+                  label: const Text("J’annule mon choix"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[200],
+                    foregroundColor: Colors.black87,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: Colors.grey.shade400),
+                    ),
+                  ),
+                ),
+              ),
           const Divider(),
 
-          // --- Bouton "Créer L'Aperçu" (maintenant le bouton de soumission) ---
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: isCreatePreviewButtonEnabled ? Colors.cyan[700] : Colors.grey, // Couleur dynamique
+                backgroundColor: isCreatePreviewButtonEnabled ? Colors.cyan[700] : Colors.grey,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10.0),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 15),
               ),
-              // --- Logique onPressed MODIFIÉE pour la validation ---
-              onPressed: isCreatePreviewButtonEnabled // Désactiver si les conditions ne sont pas remplies
+              onPressed: isCreatePreviewButtonEnabled
                   ? () async {
-                      // Déclenche la validation de tous les TextFormField dans le Form associé à _formKey
                       if (_formKey.currentState!.validate()) {
-                        // Si le formulaire est valide (titre non vide), procéder à la création
+                        // Capturer le contexte de manière stable avant les opérations asynchrones
                         final stableContext = Navigator.of(context, rootNavigator: true).context;
 
-                        widget.scaffoldKey.currentState?.closeEndDrawer();
+                        widget.scaffoldKey.currentState?.closeEndDrawer(); // Ferme le tiroir
 
+                        // Affiche un indicateur de chargement
                         showDialog(
                           context: stableContext,
                           barrierDismissible: false,
@@ -614,12 +662,13 @@ class _MyDrawerState extends State<MyDrawer> {
 
                         String? audioSourceForVideo;
 
-                        if (_audioFilePath != null) {
-                          audioSourceForVideo = _audioFilePath;
+                        // Détermine la source audio pour la vidéo
+                        if (drawerSettingsProvider.audioFilePath != null) {
+                          audioSourceForVideo = drawerSettingsProvider.audioFilePath;
                           log('Source audio: Fichier local sélectionné: $audioSourceForVideo');
-                        } else if (_selectedMusic != null) {
-                          final Map<String, dynamic>? selectedItem = _data.firstWhereOrNull(
-                            (item) => item['name'] == _selectedMusic,
+                        } else if (drawerSettingsProvider.selectedMusic != null) {
+                          final Map<String, dynamic>? selectedItem = drawerSettingsProvider.apiSoundData.firstWhereOrNull(
+                            (item) => item['name'] == drawerSettingsProvider.selectedMusic,
                           );
 
                           if (selectedItem != null) {
@@ -640,42 +689,38 @@ class _MyDrawerState extends State<MyDrawer> {
                           log('⚠️ Aucune source audio sélectionnée. La vidéo sera générée sans audio.');
                         }
 
-                        // Le titre est maintenant garanti d'être non-null et non-vide grâce à la validation
-                        final String videoTitle = _titleController.text.trim();
+                        final String videoTitle = drawerSettingsProvider.videoTitle;
                         log('Titre de la vidéo : $videoTitle');
 
+                        // Génère la vidéo
                         String videoUrl = await convertImagesToVideo(
                           selectedImages,
                           audioSource: audioSourceForVideo,
                           videoTitle: videoTitle,
                         );
 
-                        await Future.delayed(const Duration(seconds: 3));
+                        await Future.delayed(const Duration(seconds: 3)); // Délai pour la démo
 
-                        Navigator.of(stableContext, rootNavigator: true).pop();
+                        Navigator.of(stableContext, rootNavigator: true).pop(); // Ferme l'indicateur de chargement
 
+                        // Gère le résultat de la génération vidéo
                         if (videoUrl.isNotEmpty) {
-                          
-                          
-                          await showVideoSavedNotification(); // Initialiser les notifications si ce n'est pas déjà fait
+                          await showVideoSavedNotification();
                           await Future.delayed(const Duration(seconds: 2));
                           optionModal(stableContext, videoUrl, videoTitle: videoTitle);
-
                         } else {
                           ScaffoldMessenger.of(stableContext).showSnackBar(
                             const SnackBar(content: Text("Erreur dans la génération de la vidéo")),
                           );
                         }
                       } else {
-                        // Le formulaire n'est pas valide (le titre est vide), afficher un message si besoin
-                        // Le validator du TextFormField affichera déjà son message.
                         log('❌ Formulaire invalide : Le titre de la vidéo est manquant.');
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text("Veuillez entrer un titre pour la vidéo.")),
                         );
                       }
                     }
-                  : null, // Le bouton est désactivé si les conditions ne sont pas remplies
+                  : null,
               child: Text(
                 'Créer L\' Aperçu',
                 style: TextStyle(fontSize: 16, color: isCreatePreviewButtonEnabled ? Colors.white : Colors.grey[400]),
