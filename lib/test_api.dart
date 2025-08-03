@@ -6,7 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 final String apiKeytest = dotenv.env['FREESOUND_API_KEY']!;
 
-Future<List<dynamic>> fetchData({String keyword = 'background'}) async {
+Future<List<dynamic>> fetchData({String keyword = 'vacances'}) async {
   log('Appel API FreeSound avec le mot-clé: $keyword');
 
   // Construction de l'URL de recherche FreeSound

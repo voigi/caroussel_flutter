@@ -38,6 +38,7 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
     Colors.deepPurple,
     Colors.teal,
     Colors.green,
+    Colors.orangeAccent,
   ];
 
   final List<String> _titles = [
@@ -45,13 +46,17 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
     "🎵 Ajoutez votre musique",
     "🎬 Créez votre vidéo",
     "🔔 Recevez une notification",
+    "👀 Prévisualisez votre vidéo",
+
   ];
 
   final List<String> _descriptions = [
     "Sélectionnez facilement vos photos depuis votre téléphone.",
     "Importez vos musiques préférées ou explorez notre sélection en ligne.",
     "La vidéo se crée automatiquement. Vous serez prévenu(e) une fois prête !",
-    "Cliquez sur la notification pour ouvrir et partager votre vidéo finale.",
+    "Une alerte s'affiche (appelée notification) : touchez-la pour ouvrir le dossier contenant votre vidéo.",
+    "Ou Visualisez votre vidéo avant de la partager avec vos proches.",
+    
   ];
 
   final List<String> _images = [
@@ -59,6 +64,7 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
     "assets/images/add_music.png",
     "assets/images/gener_video.png",
     "assets/images/clic_notif.png",
+    "assets/images/preview.png",
   ];
 
   @override

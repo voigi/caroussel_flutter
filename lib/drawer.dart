@@ -33,6 +33,7 @@ class _MyDrawerState extends State<MyDrawer> {
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final player = AudioPlayer();
 
   bool _isTitleValid = false;
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -484,13 +485,13 @@ class _MyDrawerState extends State<MyDrawer> {
                       Icon(Icons.music_note, color: Colors.blue),
                       SizedBox(width: 8),
                       Text(
-                        'Choisissez un son proposé',
+                        'Choisissez un son proposé ',
                         style: TextStyle(color: Colors.black,fontSize:13.7),
                       ),
                     ],
                   ),
                   decoration: const InputDecoration(
-                    labelText: 'Choisissez un son proposé',
+                    labelText: 'Choisissez un son proposé (via Internet)',
                     border: OutlineInputBorder(
                         borderSide:
                             BorderSide(color: Color.fromRGBO(13, 71, 161, 1))),
@@ -648,6 +649,7 @@ class _MyDrawerState extends State<MyDrawer> {
               onPressed: isCreatePreviewButtonEnabled
                   ? () async {
                       if (_formKey.currentState!.validate()) {
+                        await player.play(AssetSource('sounds/correct.mp3'));
                         // Capturer le contexte de manière stable avant les opérations asynchrones
                         final stableContext = Navigator.of(context, rootNavigator: true).context;
 

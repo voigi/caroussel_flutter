@@ -55,5 +55,15 @@ class CarouselProvider with ChangeNotifier {
   _isContainerVisible = visible;
   notifyListeners();
 }
+
+
+  void reset() {
+    _images = [];
+    _autoScrollValue = null;
+    _imageCount = 0; // Réinitialiser le nombre d'images
+    _isContainerVisible = true;
+    _selectedFileLabel = null;
+    notifyListeners();
+  }
 }
 

@@ -125,30 +125,58 @@ class _MyAppState extends State<MyApp> {
         key: _scaffoldKey,
         backgroundColor: Colors.white,
 appBar: AppBar(
+  leading: Padding(
+    padding: const EdgeInsets.only(left: 35.0),
+    child: IconButton(
+            icon: Icon(Icons.refresh_outlined, color: Colors.white),
+            tooltip: "Réinitialiser le carrousel",
+            onPressed: () {
+              carouselProvider.reset();
+            },
+          ),
+  ),
   backgroundColor: Colors.cyan[700],
-  title: const Text('Mon Carrousel', style: TextStyle(color: Colors.white)),
-  centerTitle: true, // Ceci va centrer le titre
-  actions: [
-    IconButton(
-      icon: Icon(Icons.help_outline),
-      tooltip: "Revoir le guide",
-      onPressed: () {
-       Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => OnBoardingPage(
-            onDone: () {
-              Navigator.pop(context);
-            },
-            onSkip: () {
-              Navigator.pop(context);
-            },
-          )),
-        );
-      },
+  centerTitle: true,
+  title: SizedBox(
+    width: double.infinity,
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Spacer pour pousser l'icone un peu plus à gauche
+        const SizedBox(width:30 ),
+
+        const Text('Mon Carrousel', style: TextStyle(color: Colors.white)),
+
+        // Spacer pour équilibrer et centrer le texte globalement
+        const Spacer(flex: 3),
+      ],
     ),
-    const IconButton(onPressed: null, icon: Icon(Icons.search, color: Colors.transparent)),
+  ),
+  actions: [
+    Padding(
+      padding: const EdgeInsets.only(right: 25.0), // Ajuste l'espacement à droite
+      child: IconButton(
+        icon: Icon(Icons.help_outline, color: Colors.white),
+        tooltip: "Revoir le guide",
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => OnBoardingPage(
+                onDone: () => Navigator.pop(context),
+                onSkip: () => Navigator.pop(context),
+              ),
+            ),
+          );
+        },
+      ),
+    ),
+    const SizedBox(width: 12),
   ],
 ),
+
+
+
         // Le tiroir de fin de Scaffold, qui contient les paramètres.
         endDrawer: SizedBox(
           width: MediaQuery.of(context).size.width * 0.8, // Le tiroir occupe 80% de la largeur de l'écran
