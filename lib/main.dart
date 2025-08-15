@@ -16,13 +16,17 @@ import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 import 'package:caroussel/utils.dart'; // Importation nécessaire pour requestNotificationPermission
 import 'package:caroussel/root_app.dart';
 import 'package:caroussel/guide.dart'; // Importation nécessaire pour OnBoardingPage
+import 'package:caroussel/bottomNavbar.dart'; // Importation nécessaire pour BottomNavBar
+import 'package:caroussel/pages/privacyPolicy.dart'; // Importation nécessaire pour PrivacyPolicy
 
 // Importation nécessaire si Carrousel utilise File.file pour afficher les images
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await dotenv.load(fileName: ".env"); // Charge les variables d'environnement depuis le fichier .env
+  await dotenv.load(
+      fileName:
+          ".env"); // Charge les variables d'environnement depuis le fichier .env
 
   // Initialisation de Firebase
   await Firebase.initializeApp(
@@ -31,26 +35,24 @@ void main() async {
 
   // Initialisation des notifications locales
   await initNotifications();
-  await requestNotificationPermission(); // 🔔 gestion Android 13+
+  await requestNotificationPermission(); // gestion Android 13+
 
   // Verrouille l'orientation sur le mode portrait
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
 
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => CarouselProvider()),
-        ChangeNotifierProvider(create: (_) => DrawerSettingsProvider()), // Ajout du provider pour les paramètres du tiroir
-        // tu peux ajouter d'autres providers ici
-      ],
-      child: const RootApp(),
-  )
-  );
-
+  runApp(MultiProvider(
+    providers: [
+      ChangeNotifierProvider(create: (_) => CarouselProvider()),
+      ChangeNotifierProvider(
+          create: (_) =>
+              DrawerSettingsProvider()), // Ajout du provider pour les paramètres du tiroir
+      // tu peux ajouter d'autres providers ici
+    ],
+    child: const RootApp(),
+  ));
 }
-
 
 class MyApp extends StatefulWidget {
   final bool showIntro;
@@ -62,10 +64,12 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  bool _isContainerVisible = false; // Contrôle la visibilité du widget Carrousel
+  bool _isContainerVisible =
+      false; // Contrôle la visibilité du widget Carrousel
   List<String>? _imagePath; // Contient les chemins des images sélectionnées
   int? _autoScrollValue; // Valeur du défilement automatique
   bool swipeEnabled = false; // Contrôle si le swipe est activé
+  bool _showScrollHint = false; // Indique si l'astuce de défilement doit être affichée
 
   void activerSwipe() {
     setState(() {
@@ -116,99 +120,93 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     // Écoute les changements dans CarouselProvider pour obtenir le nombre d'images.
     final carouselProvider = context.watch<CarouselProvider>();
-    final int imageCount = carouselProvider.imageCount; // Récupère le nombre d'images
+    final int imageCount =
+        carouselProvider.imageCount; // Récupère le nombre d'images
 
     return MaterialApp(
-     // navigatorKey: navigatorKey, // Utilise la clé de navigation globale
+      // navigatorKey: navigatorKey, // Utilise la clé de navigation globale
       home: Scaffold(
         endDrawerEnableOpenDragGesture: swipeEnabled,
         key: _scaffoldKey,
         backgroundColor: Colors.white,
-appBar: AppBar(
-  leading: Padding(
-    padding: const EdgeInsets.only(left: 35.0),
-    child: IconButton(
-            icon: Icon(Icons.refresh_outlined, color: Colors.white),
+        appBar: AppBar(
+          backgroundColor: Colors.cyan[700],
+          centerTitle: true, // L'AppBar s'occupe du centrage du titre
+          titleSpacing:
+              0, // Réduit l'espace entre l'icône de gauche et le titre
+          leading: IconButton(
+            icon: const Icon(Icons.refresh_outlined, color: Colors.white),
             tooltip: "Réinitialiser le carrousel",
             onPressed: () {
               carouselProvider.reset();
             },
+            // Le padding a été ajusté ici
+            padding: const EdgeInsets.only(left: 40.0),
           ),
-  ),
-  backgroundColor: Colors.cyan[700],
-  centerTitle: true,
-  title: SizedBox(
-    width: double.infinity,
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // Spacer pour pousser l'icone un peu plus à gauche
-        const SizedBox(width:30 ),
-
-        const Text('Mon Carrousel', style: TextStyle(color: Colors.white)),
-
-        // Spacer pour équilibrer et centrer le texte globalement
-        const Spacer(flex: 3),
-      ],
-    ),
-  ),
-  actions: [
-    Padding(
-      padding: const EdgeInsets.only(right: 25.0), // Ajuste l'espacement à droite
-      child: IconButton(
-        icon: Icon(Icons.help_outline, color: Colors.white),
-        tooltip: "Revoir le guide",
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => OnBoardingPage(
-                onDone: () => Navigator.pop(context),
-                onSkip: () => Navigator.pop(context),
+          leadingWidth: 80.0,
+          title: const Text(
+            'Mon Carrousel',
+            style: TextStyle(color: Colors.white),
+          ),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 40.0),
+              child: IconButton(
+                icon: const Icon(Icons.help_outline, color: Colors.white),
+                tooltip: "Revoir le guide",
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => OnBoardingPage(
+                        onDone: () => Navigator.pop(context),
+                        onSkip: () => Navigator.pop(context),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
-          );
-        },
-      ),
-    ),
-    const SizedBox(width: 12),
-  ],
-),
-
-
+          ],
+        ),
 
         // Le tiroir de fin de Scaffold, qui contient les paramètres.
         endDrawer: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.8, // Le tiroir occupe 80% de la largeur de l'écran
-          child: MyDrawer(scaffoldKey: _scaffoldKey), // Passe la clé du Scaffold au MyDrawer
+          width: MediaQuery.of(context).size.width *
+              0.8, // Le tiroir occupe 80% de la largeur de l'écran
+          child: MyDrawer(
+              scaffoldKey:
+                  _scaffoldKey), // Passe la clé du Scaffold au MyDrawer
         ),
         //endDrawerEnableOpenDragGesture  est true par défaut, permettant l'ouverture par glissement.
         body: Column(
-
-          mainAxisAlignment: MainAxisAlignment.center, // Centre verticalement le contenu principal
+          mainAxisAlignment: MainAxisAlignment
+              .center, // Centre verticalement le contenu principal
           children: [
-           // ElevatedButton(onPressed: showVideoSavedNotification, child: const Text('Afficher la notification')),
+            // ElevatedButton(onPressed: showVideoSavedNotification, child: const Text('Afficher la notification')),
             const SizedBox(height: 30.0), // Espace en haut de la colonne
-                          Carrousel(
+            Carrousel(
                 // Si Carrousel a besoin de la liste d'images, passez-lui directement du Provider:
                 // images: carouselProvider.images,
                 // Si Carrousel a besoin de la valeur de défilement du Provider:
                 // autoScrollValue: carouselProvider.autoScrollValue,
                 // Pour l'instant, on utilise la variable d'état locale de MyApp
                 //autoScrollValue: _autoScrollValue,
+                ),
+            const SizedBox(
+                height: 5), // Espace entre le carrousel et le compteur d'
+            if (carouselProvider.isContainerVisible &&
+                carouselProvider.images.isNotEmpty)
+              Text(
+                'Nombre d\'images sélectionnées : $imageCount',
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
- 
-
-              if(carouselProvider.isContainerVisible && carouselProvider.images.isNotEmpty ) 
-                 Text(
-              'Nombre d\'images sélectionnées : $imageCount',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-              
-            
-               
+          // Espace entre le carrousel et le conteneur MediaUploader
             // Le conteneur "Ajouter un Média" (MediaUploader)
-            Expanded( // Permet au conteneur de prendre l'espace restant dans la colonne
+            const SizedBox(height: 7.63), // Espace avant le conteneur MediaUploader
+            Expanded(
+              // Permet au conteneur de prendre l'espace restant dans la colonne
               child: Center(
                 child: Container(
                   padding: const EdgeInsets.all(20),
@@ -250,24 +248,43 @@ appBar: AppBar(
                   ),
                   ),
                 ),
+
               ),
             ),
-            const SizedBox(height: 20), // Espace après le conteneur MediaUploader
+            const SizedBox(
+                height: 20), // Espace après le conteneur MediaUploader
 
             // Affichage conditionnel du Carrousel et du compteur d'images
-            if (_isContainerVisible && _imagePath != null && _imagePath!.isNotEmpty) ...[
+            if (_isContainerVisible &&
+                _imagePath != null &&
+                _imagePath!.isNotEmpty) ...[
               // Le widget Carrousel (assumé qu'il prend ses images du Provider ou utilise _imagePath)
 
-              const SizedBox(height: 20), // Espace entre le carrousel et le compteur
+              const SizedBox(
+                  height: 20), // Espace entre le carrousel et le compteur
             ],
 
             // --- AFFICHAGE DU COMPTEUR D'IMAGES SÉLECTIONNÉES ---
             // Ce texte est maintenant toujours affiché, indépendamment de la présence d'images.
             // Il sera à 0 si aucune image n'est sélectionnée.
-          
+
             // --- FIN AFFICHAGE ---
             const SizedBox(height: 20), // Espace en bas de la colonne
           ],
+        ),
+        bottomNavigationBar: Container(
+          // Hauteur du BottomNavBar
+         // color: Colors.cyan[700], // Couleur de fond du BottomNavBar
+          child: BottomNavBar(
+            onPrivacyTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PrivacyPolicyPage(),
+                ),
+              );
+            }, // Callback pour ouvrir la page de politique de confidentialité
+          ),
         ),
       ),
     );

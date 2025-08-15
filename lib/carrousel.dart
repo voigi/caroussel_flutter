@@ -176,6 +176,7 @@ class _CarrouselState extends State<Carrousel> {
     }
 
     return Container(
+     
       margin: const EdgeInsets.only(bottom: 20.0),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -190,7 +191,7 @@ class _CarrouselState extends State<Carrousel> {
         ],
       ),
       width: MediaQuery.of(context).size.width * 0.8,
-      height: MediaQuery.of(context).size.height * 0.3,
+      height: MediaQuery.of(context).size.height * 0.25,
       child: Stack(
         children: [
           Center(

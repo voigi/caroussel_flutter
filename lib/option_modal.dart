@@ -316,124 +316,84 @@ class _VideoPlayerModalState extends State<VideoPlayerModal> {
 
 
   // --- Modale de Choix de Partage Personnalisée ---
-  void _showCustomShareOptionsModal() {
-    showModalBottomSheet(
-      context: context,
-      isDismissible: false,
-      //enableDrag: false,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (BuildContext context) {
-        return Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Text(
-                'Comment voulez-vous partager votre vidéo ?',
-                style: Theme.of(context).textTheme.titleLarge,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              // Bouton "Partager sur WhatsApp"
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _shareVideoOnWhatsApp();
-                },
-                icon: const FaIcon(FontAwesomeIcons.whatsapp, size: 24),
-                label: const Text('Partager sur WhatsApp'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+void _showCustomShareOptionsModal() {
+  showModalBottomSheet(
+    context: context,
+    isDismissible: true, // L'utilisateur peut cliquer à côté ou balayer pour fermer
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (BuildContext context) {
+      return Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Text(
+              'Où partager ?',
+              style: Theme.of(context).textTheme.titleLarge,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                _shareVideoOnWhatsApp();
+              },
+              icon: const FaIcon(FontAwesomeIcons.whatsapp, size: 24),
+              label: const Text('Partager sur WhatsApp'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              const SizedBox(height: 10),
-              // NOUVEAU Bouton "Partager sur Facebook"
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _shareVideoOnFacebook(); // Appelle la nouvelle fonction Facebook
-                },
-                icon: const FaIcon(FontAwesomeIcons.facebook, size: 24),
-                label: const Text('Partager sur Facebook'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  backgroundColor: const Color(0xFF1877F2),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                _shareVideoOnFacebook();
+              },
+              icon: const FaIcon(FontAwesomeIcons.facebook, size: 24),
+              label: const Text('Partager sur Facebook'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                backgroundColor: const Color(0xFF1877F2),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
-            
-              // NOUVEAU Bouton "Partager sur LinkedIn"
-              // ElevatedButton.icon(
-              //   onPressed: () {
-              //     Navigator.pop(context);
-              //     _shareVideoOnLinkedIn(); // Appelle la nouvelle fonction LinkedIn
-              //   },
-              //   icon: const FaIcon(FontAwesomeIcons.linkedin, size: 24),
-              //   label: const Text('Partager sur LinkedIn'),
-              //   style: ElevatedButton.styleFrom(
-              //     padding: const EdgeInsets.symmetric(vertical: 12),
-              //     backgroundColor: const Color(0xFF0A66C2),
-              //     foregroundColor: Colors.white,
-              //     shape: RoundedRectangleBorder(
-              //       borderRadius: BorderRadius.circular(10),
-              //     ),
-              //   ),
-              // ),
-              const SizedBox(height: 10),
-              // // Bouton "Envoyer par E-mail"
-              // ElevatedButton.icon(
-              //   onPressed: () {
-              //     Navigator.pop(context);
-              //     _shareVideoByEmail();
-              //   },
-              //   icon: const Icon(Icons.email),
-              //   label: const Text('Envoyer par E-mail'),
-              //   style: ElevatedButton.styleFrom(
-              //     padding: const EdgeInsets.symmetric(vertical: 12),
-              //     backgroundColor: Colors.blueAccent,
-              //     foregroundColor: Colors.white,
-              //     shape: RoundedRectangleBorder(
-              //       borderRadius: BorderRadius.circular(10),
-              //     ),
-              //   ),
-              // ),
-              // const SizedBox(height: 10),
-              // Bouton "Autres applications"
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _shareVideoGeneric();
-                },
-                icon: const Icon(Icons.apps),
-                label: const Text('Partager (E-mail, LinkedIn, etc.)'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  backgroundColor: Colors.grey[700],
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                _shareVideoGeneric();
+              },
+              icon: const Icon(Icons.apps),
+              label: const Text('Autres applications'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                backgroundColor: Colors.grey[700],
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              const SizedBox(height: 10),
-            ],
-          ),
-        );
-      },
-    );
-  }
+            ),
+           
 
+          ],
+        ),
+      );
+    },
+  );
+}
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -498,30 +458,50 @@ class _VideoPlayerModalState extends State<VideoPlayerModal> {
         },
       ),
       actionsPadding: const EdgeInsets.only(right: 16, bottom: 12),
-      actionsAlignment: MainAxisAlignment.end,
-      actions: <Widget>[
-        TextButton(
+      actionsAlignment: MainAxisAlignment.spaceBetween,
+actions: <Widget>[
+  Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Padding(
+        padding: const EdgeInsets.only(left: 35.0,bottom: 10),
+        child: ElevatedButton(
           onPressed: () {
             Navigator.of(context).pop();
             log('Prévisualisation annulée');
           },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red[600], // Fond rouge pour Annuler
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
           child: const Text('Annuler'),
         ),
-        ElevatedButton(
+      ),
+      const Spacer(),
+      Padding(
+        padding: const EdgeInsets.only(right: 14.0,bottom: 10),
+        child: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blueAccent,
+            backgroundColor: Colors.green, // Fond vert pour Partager
+            foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
           ),
           onPressed: () {
-             Navigator.of(context).pop();
-             _showCustomShareOptionsModal();
-           // openFileExplorer();
+            Navigator.of(context).pop();
+            _showCustomShareOptionsModal();
           },
           child: const Text('Partager'),
         ),
-      ],
+      ),
+    ],
+  ),
+],
+
     );
   }
 }

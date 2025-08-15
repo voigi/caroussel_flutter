@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:intro_slider/intro_slider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_html/flutter_html.dart';
+import 'package:caroussel/pages/privacy.dart';
 
 class OnBoardingPage extends StatefulWidget {
   final VoidCallback onDone;
@@ -21,6 +24,48 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
   int _currentIndex = 0;
   bool _animateCurrentSlide = false;
 
+  Function? goToTabFunction;
+
+  final List<Color> _backgroundColors = [
+    Colors.blueAccent,
+    Colors.deepPurple,
+    Colors.teal,
+    Colors.green,
+    Colors.orangeAccent,
+    Colors.indigo,
+    Colors.blueGrey[700]!, // Slide Politique
+  ];
+
+  final List<String> _titles = [
+    "🖼️ Choisissez vos images",
+    "🎵 Ajoutez votre musique",
+    "🎬 Créez votre vidéo",
+    "🔔 Recevez une notification",
+    "👀 Prévisualisez votre vidéo",
+    "🎉 Prêt à démarrer !",
+    "🔒 Respect de votre vie privée", // Slide Politique
+  ];
+
+  final List<String> _descriptions = [
+    "Sélectionnez vos photos simplement.",
+    "Ajoutez votre musique ou explorez notre sélection.",
+    "La vidéo se crée automatiquement et vous serez averti·e.",
+    "Touchez la notification pour ouvrir votre vidéo.",
+    "Visualisez avant de partager avec vos proches.",
+    "Vous êtes prêt·e à créer votre première vidéo. Amusez-vous !",
+    "Nous respectons votre vie privée et ne collectons aucune donnée personnelle.", // Slide Politique
+  ];
+
+  final List<String> _images = [
+    "assets/images/choice_images.png",
+    "assets/images/add_music.png",
+    "assets/images/gener_video.png",
+    "assets/images/clic_notif.png",
+    "assets/images/preview.png",
+    "assets/images/celebration.png",
+    "assets/images/privacy.png", // Slide Politique
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -33,39 +78,47 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
     });
   }
 
-  final List<Color> _backgroundColors = [
-    Colors.blueAccent,
-    Colors.deepPurple,
-    Colors.teal,
-    Colors.green,
-    Colors.orangeAccent,
-  ];
+  void _goToStart() {
+    if (goToTabFunction != null) {
+      goToTabFunction!(0);
+    }
+  }
 
-  final List<String> _titles = [
-    "🖼️ Choisissez vos images",
-    "🎵 Ajoutez votre musique",
-    "🎬 Créez votre vidéo",
-    "🔔 Recevez une notification",
-    "👀 Prévisualisez votre vidéo",
+  // Fonction pour charger et afficher le contenu HTML du fichier local
+  // Future<void> _showPrivacyPolicy() async {
+  //   try {
+  //     String htmlContent = await rootBundle.loadString('assets/privacy.html');
 
-  ];
-
-  final List<String> _descriptions = [
-    "Sélectionnez facilement vos photos depuis votre téléphone.",
-    "Importez vos musiques préférées ou explorez notre sélection en ligne.",
-    "La vidéo se crée automatiquement. Vous serez prévenu(e) une fois prête !",
-    "Une alerte s'affiche (appelée notification) : touchez-la pour ouvrir le dossier contenant votre vidéo.",
-    "Ou Visualisez votre vidéo avant de la partager avec vos proches.",
-    
-  ];
-
-  final List<String> _images = [
-    "assets/images/choice_images.png",
-    "assets/images/add_music.png",
-    "assets/images/gener_video.png",
-    "assets/images/clic_notif.png",
-    "assets/images/preview.png",
-  ];
+  //     // Affiche le contenu dans une boîte de dialogue
+  //     showDialog(
+  //       context: context,
+  //       builder: (BuildContext context) {
+  //         return AlertDialog(
+  //           title: const Text("Politique de confidentialité"),
+  //           content: SingleChildScrollView(
+  //             child: Html(data: htmlContent),
+  //           ),
+  //           actions: [
+  //             TextButton(
+  //               onPressed: () => Navigator.of(context).pop(),
+  //               child: const Text('Fermer'),
+  //             ),
+  //           ],
+  //         );
+  //       },
+  //     );
+  //   } catch (e) {
+  //     debugPrint('Erreur de chargement du fichier HTML: $e');
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('Impossible de charger la politique de confidentialité.')),
+  //     );
+  //   }
+  // }
+   void _navigateToPrivacyPolicy() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const PrivacyPolicyPage()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,75 +147,98 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Mon Carrousel',
-              style: textStyleAppTitle,
-            ),
+            Text('Mon Carrousel', style: textStyleAppTitle),
+            if (_currentIndex > 0 && _currentIndex < _titles.length - 1) ...[
+              const SizedBox(width: 20),
+              IconButton(
+                icon: const Icon(Icons.refresh, color: Colors.white),
+                tooltip: "Revenir au début",
+                onPressed: _goToStart,
+              ),
+            ],
           ],
         ),
       ),
       extendBodyBehindAppBar: true,
       body: IntroSlider(
+        refFuncGoToTab: (func) {
+          goToTabFunction = func;
+        },
         listCustomTabs: List.generate(_titles.length, (index) {
           final bool shouldAnimate = (index == _currentIndex && _animateCurrentSlide);
 
           return Container(
             width: double.infinity,
             color: _backgroundColors[index],
-            child: Padding(
-              // Le padding peut rester le même, ou être ajusté légèrement
-              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
-              child: Column(
-                // --- MODIFICATION CLÉ : Retour à MainAxisAlignment.center ---
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Image principale du slide
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.35,
-                    child: Center(
-                      child: Image.asset(
-                        _images[index],
-                        fit: BoxFit.contain,
+            child: SafeArea( // Ajout de SafeArea pour éviter que le contenu ne passe sous l'AppBar
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 30),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center, // Centrage vertical de tous les éléments
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.35,
+                      child: Center(
+                        child: Image.asset(
+                          _images[index],
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
-                  ),
-
-                  // --- ESPACE ENTRE IMAGE ET TEXTE ---
-                  // Ajustez ces valeurs pour obtenir le meilleur équilibre visuel.
-                  // Commencez par des valeurs plus petites et augmentez si nécessaire.
-                  const SizedBox(height: 30), // Espace après l'image
-
-                  // Titre animé
-                  AnimatedOpacity(
-                    opacity: shouldAnimate ? 1.0 : 0.0,
-                    duration: const Duration(milliseconds: 500),
-                    child: Text(
-                      _titles[index],
-                      style: textStyleTitle,
-                      textAlign: TextAlign.center,
+                    const SizedBox(height: 30),
+                    AnimatedOpacity(
+                      opacity: shouldAnimate ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 500),
+                      child: Text(
+                        _titles[index],
+                        style: textStyleTitle,
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 15), // Espace entre titre et description
-
-                  // Description animée
-                  AnimatedOpacity(
-                    opacity: shouldAnimate ? 1.0 : 0.0,
-                    duration: const Duration(milliseconds: 500),
-                    child: Text(
-                      _descriptions[index],
-                      style: textStyleDesc,
-                      textAlign: TextAlign.center,
+                    const SizedBox(height: 15),
+                    AnimatedOpacity(
+                      opacity: shouldAnimate ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 500),
+                      child: Text(
+                        _descriptions[index],
+                        style: textStyleDesc,
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                  ),
-
-                  // --- REMARQUE : Le Spacer est supprimé ici ---
-                  // Il n'y a plus de Spacer() car MainAxisAlignment.center gère le centrage global.
-                ],
+                    if (index == _titles.length - 1) ...[
+                      const SizedBox(height: 30), // Ajout d'un petit espace pour la lisibilité
+                      TextButton(
+                        onPressed: _navigateToPrivacyPolicy,
+                        child: Row( // Utilisation d'un Row pour l'icône et le texte
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.info_outline, // L'icône a été ajoutée ici
+                              color: Colors.lightBlueAccent,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8), // Petit espace entre l'icône et le texte
+                            Text(
+                              'Politique de confidentialité',
+                              style: textStyleDesc.copyWith(
+                                decoration: TextDecoration.none,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.lightBlueAccent,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
           );
         }),
         onTabChangeCompleted: (index) {
+          if (index >= _titles.length) return;
           setState(() {
             _currentIndex = index;
             _animateCurrentSlide = false;
@@ -190,25 +266,26 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
           children: const [
             Icon(Icons.skip_next, color: Colors.white),
             SizedBox(width: 6),
-            Text('Passer', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            Text('Passer',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
           ],
         ),
         renderPrevBtn: const Icon(Icons.arrow_back_ios, color: Colors.white),
-        renderDoneBtn: Row(
-          children: const [
-            Text('Terminé', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-           /// SizedBox(width: ),
-            //Icon(Icons.check_circle_outline, color: Colors.white),
-          ],
+        renderDoneBtn: _currentIndex == _titles.length - 1
+            ? Row(
+                children: const [
+                  Text('Terminé',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
+                ],
+              )
+            : Container(),
+        indicatorConfig: IndicatorConfig(
+          colorIndicator: Colors.white54,
+          colorActiveIndicator: Colors.white,
+          sizeIndicator: 10.0,
         ),
-       indicatorConfig: IndicatorConfig(
-        colorIndicator: Colors.white54,
-        colorActiveIndicator: Colors.white,
-        sizeIndicator: 10.0,
-       ),
-        // colorDot: Colors.white54,
-        // colorActiveDot: Colors.white,
-        // sizeDot: 10.0,
       ),
     );
   }

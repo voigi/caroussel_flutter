@@ -593,12 +593,12 @@ class _MediaUploaderState extends State<MediaUploader> {
     // Il est bon de s'assurer que le carouselProvider.autoScrollValue a une valeur par défaut
     // s'il n'est pas encore défini (par exemple, au premier démarrage de l'app).
     // Si votre CarouselProvider initialise _autoScrollValue à 0, ce n'est pas strictement nécessaire ici.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final carouselProvider = Provider.of<CarouselProvider>(context, listen: false);
-      if (carouselProvider.autoScrollValue == null) {
-        carouselProvider.updateAutoScrollValue(0); // Définit sur Désactivé par défaut
-      }
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   final carouselProvider = Provider.of<CarouselProvider>(context, listen: false);
+    //   // if (carouselProvider.autoScrollValue == null) {
+    //   //   carouselProvider.updateAutoScrollValue(0); // Définit sur Désactivé par défaut
+    //   // }
+    // });
   }
 
 
@@ -717,16 +717,17 @@ class _MediaUploaderState extends State<MediaUploader> {
           ),
           const SizedBox(height: 5),
           if (canSelectScroll)
-            DropdownButtonFormField<int>(
+            DropdownButtonFormField<int?>(
               // La valeur est lue directement depuis le provider.
               // Utilisez null ou une valeur par défaut cohérente (0)
               // si `autoScrollValue` peut être null au démarrage.
-              value: carouselProvider.autoScrollValue ?? 0,
+              value: carouselProvider.autoScrollValue ?? null,
               items: const [
+               
                 DropdownMenuItem(value: 0, child: Text('Désactivé')),
                 DropdownMenuItem(value: 1, child: Text('Activé')),
               ],
-              onChanged: (value) {
+              onChanged: (int? value) {
                 // Mettez à jour le provider directement.
                 // Le `context.read` est utilisé ici car nous ne voulons pas
                 // que ce widget se reconstruise si la valeur change, seulement la modifier.
@@ -737,6 +738,11 @@ class _MediaUploaderState extends State<MediaUploader> {
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'Défilement Automatique',
+                hintText:  ' Sélectionnez une option',
+               // helperText: 'Les images défileront automatiquement.',
+                
+              
+                
               ),
             )
           else
@@ -744,31 +750,31 @@ class _MediaUploaderState extends State<MediaUploader> {
               'Au moins 2 images sont nécessaires pour activer le défilement automatique.',
               style: TextStyle(color: Colors.red),
             ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 50),
-              backgroundColor: isButtonEnabled ? Colors.green : Colors.grey,
-            ),
-            onPressed: isButtonEnabled
-                ? () async {
-                    // La valeur `carouselProvider.autoScrollValue` est déjà à jour
-                    // et sera accessible dans `carousel.dart` via son propre `Provider.of` ou `Consumer`.
-                    widget.onValidation();
-                    Future.delayed(const Duration(milliseconds: 500), () {
-                      if (widget.scaffoldKey.currentState != null) {
-                        widget.scaffoldKey.currentState!.openEndDrawer();
-                      }
-                    });
-                  }
-                : null,
-            child: Text(
-              'Valider',
-              style: isButtonEnabled
-                  ? const TextStyle(color: Colors.white)
-                  : TextStyle(color: Colors.grey[600]),
-            ),
-          ),
+          const SizedBox(height:10),
+          ElevatedButton.icon(
+  style: ElevatedButton.styleFrom(
+    minimumSize: const Size(double.infinity, 50),
+    backgroundColor: isButtonEnabled ? Colors.green : Colors.grey,
+  ),
+  onPressed: isButtonEnabled
+      ? () async {
+          widget.onValidation();
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (widget.scaffoldKey.currentState != null) {
+              widget.scaffoldKey.currentState!.openEndDrawer();
+            }
+          });
+        }
+      : null,
+  icon: const Icon(Icons.arrow_forward_ios, color: Colors.white),
+  label: Text(
+    'Continuer'.toUpperCase(),
+    style: isButtonEnabled
+        ? const TextStyle(color: Colors.white)
+        : TextStyle(color: Colors.grey[600]),
+  ),
+),
+
         ],
       ),
     );
