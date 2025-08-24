@@ -29,7 +29,8 @@ Future<void> openFileExplorer() async {
   final intent = AndroidIntent(
     action: 'android.intent.action.VIEW',
     data:
-        'content://com.android.externalstorage.documents/document/primary%3AMovies',
+        'content://com.android.externalstorage.documents/document/primary%3AMovies%2FArchives',
+
     package: 'com.android.documentsui',
     flags: <int>[
       Flag.FLAG_ACTIVITY_NEW_TASK,

@@ -1,12 +1,18 @@
-// Fichier : privacy_policy_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_html/flutter_html.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+
 
 class PrivacyPolicyPage extends StatelessWidget {
   const PrivacyPolicyPage({super.key});
+
+
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -26,14 +32,66 @@ class PrivacyPolicyPage extends StatelessWidget {
               snapshot.hasData) {
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
-              child: Html(
-                data: snapshot.data!,
-                style: {
-                  "body": Style(
-                    fontSize: FontSize(16.0),
-                    fontFamily: 'OpenSans',
+              child: Column(
+                children: [
+Html(
+  data: snapshot.data!,
+onLinkTap: (url, attributes, element) async {
+  if (url != null) {
+    // Vérifie si c'est bien le mail de contact
+    if (url.startsWith("mailto:")) {
+      final String email = "moncarrousel.contact@gmail.com";
+      final String subject = Uri.encodeComponent(
+          "Question à propos de l'application Mon Carrousel");
+      final String body = Uri.encodeComponent(
+          "Bonjour, j'ai une question à propos de l'application Mon Carrousel :");
+
+      final Uri mailtoUri = Uri.parse("mailto:$email?subject=$subject&body=$body");
+
+      if (await canLaunchUrl(mailtoUri)) {
+        await launchUrl(mailtoUri);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Impossible d’ouvrir l’application mail.')),
+        );
+      }
+    } else {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Impossible d’ouvrir ce lien.')),
+        );
+      }
+    }
+  }
+},
+
+  style: {
+    "body": Style(
+      fontSize: FontSize(16.0),
+      fontFamily: 'OpenSans',
+    ),
+  },
+),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(true); // retourne true
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: const Text("J’accepte"),
                   ),
-                },
+                ],
               ),
             );
           } else if (snapshot.hasError) {

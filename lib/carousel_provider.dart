@@ -6,6 +6,7 @@ class CarouselProvider with ChangeNotifier {
   List<String> _images = [];
   int? _autoScrollValue ;
    int _imageCount = 0; 
+    int existingVideoCount = 0;
   int get imageCount => _imageCount;
   bool _isContainerVisible = true;
   bool get isContainerVisible => _isContainerVisible;
@@ -55,6 +56,12 @@ class CarouselProvider with ChangeNotifier {
   _isContainerVisible = visible;
   notifyListeners();
 }
+
+  void setExistingVideoCount(int count) {
+    existingVideoCount = count;
+    notifyListeners();
+  }
+
 
 
   void reset() {

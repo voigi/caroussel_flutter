@@ -7,10 +7,11 @@ class DrawerSettingsProvider with ChangeNotifier {
   String? _audioFileName;
   String? _audioFilePath; // Chemin local du fichier audio
   String? _selectedMusic; // Nom de la musique sélectionnée via l'API
+  String? _selectedMusicAuthor; // Auteur de la musique sélectionnée
   bool _isDropdownDisabled = false;
   bool _isFilePickerDisabled = false;
   List _apiSoundData = []; // Données des sons de l'API
-  String _searchKeyword = 'background';
+  String _searchKeyword = 'holiday'; // Mot-clé de recherche par défaut
   String _videoTitle = ''; // Titre de la vidéo
   bool _isAudioOptionsExpanded = false; // État d'expansion de la tuile audio
 
@@ -18,6 +19,7 @@ class DrawerSettingsProvider with ChangeNotifier {
   String? get audioFileName => _audioFileName;
   String? get audioFilePath => _audioFilePath;
   String? get selectedMusic => _selectedMusic;
+  String? get selectedMusicAuthor => _selectedMusicAuthor;
   bool get isDropdownDisabled => _isDropdownDisabled;
   bool get isFilePickerDisabled => _isFilePickerDisabled;
   List get apiSoundData => _apiSoundData;
@@ -81,12 +83,20 @@ class DrawerSettingsProvider with ChangeNotifier {
     _savePreferences();
   }
 
+void setSelectedMusicAuthor(String? author) {
+    _selectedMusicAuthor = author;
+    notifyListeners();
+    _savePreferences();
+  }
+
+
   // --- Méthodes pour la persistance avec shared_preferences ---
   Future<void> _savePreferences() async {
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('audioFileName', _audioFileName ?? '');
     prefs.setString('audioFilePath', _audioFilePath ?? '');
     prefs.setString('selectedMusic', _selectedMusic ?? '');
+    prefs.setString('selectedMusicAuthor', _selectedMusicAuthor ?? '');
     prefs.setBool('isDropdownDisabled', _isDropdownDisabled);
     prefs.setBool('isFilePickerDisabled', _isFilePickerDisabled);
     prefs.setString('searchKeyword', _searchKeyword);
@@ -99,6 +109,7 @@ class DrawerSettingsProvider with ChangeNotifier {
     _audioFileName = prefs.getString('audioFileName');
     _audioFilePath = prefs.getString('audioFilePath');
     _selectedMusic = prefs.getString('selectedMusic');
+    _selectedMusicAuthor = prefs.getString('selectedMusicAuthor');
     _isDropdownDisabled = prefs.getBool('isDropdownDisabled') ?? false;
     _isFilePickerDisabled = prefs.getBool('isFilePickerDisabled') ?? false;
     _searchKeyword = prefs.getString('searchKeyword') ?? 'background';
@@ -114,8 +125,9 @@ class DrawerSettingsProvider with ChangeNotifier {
     _selectedMusic = null;
     _isDropdownDisabled = false;
     _isFilePickerDisabled = false;
-    _searchKeyword = 'background';
+    _searchKeyword = 'holiday';
     _videoTitle = '';
+    _selectedMusicAuthor = null;
     // _apiSoundData n'est généralement pas réinitialisée ici car elle vient de l'API
     _isAudioOptionsExpanded = false;
     notifyListeners();

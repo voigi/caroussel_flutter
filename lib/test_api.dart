@@ -6,15 +6,21 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 final String apiKeytest = dotenv.env['FREESOUND_API_KEY']!;
 
-Future<List<dynamic>> fetchData({String keyword = 'vacances'}) async {
+Future<List<dynamic>> fetchData({String keyword ='holiday'}) async {
   log('Appel API FreeSound avec le mot-clé: $keyword');
 
   // Construction de l'URL de recherche FreeSound
   // Le 'query' sera le mot-clé fourni par l'utilisateur.
   // 'filter=duration:[0 TO 10]' limite les sons à 10 secondes maximum.
   // 'fields=id,name' demande uniquement l'ID et le nom du son pour simplifier la réponse.
-  final url = Uri.parse(
-      'https://freesound.org/apiv2/search/text/?query=$keyword&filter=duration:[0 TO 60]&fields=id,name&token=$apiKeytest');
+final url = Uri.parse(
+  'https://freesound.org/apiv2/search/text/?query=$keyword'
+  '&filter=duration:[0 TO 60]+license:"Creative Commons 0"+category:Music'
+  '&fields=id,name,num_downloads,avg_rating,username'
+  '&sort=rating_desc'
+  '&token=$apiKeytest'
+);
+
 
   try {
     final response = await http.get(url);
@@ -43,7 +49,7 @@ Future<List<dynamic>> fetchData({String keyword = 'vacances'}) async {
 
 
 Future<String?> getSoundDownloadUrl(int soundId) async {
-  const apiKeytest = 'BnTMdvUVteCn8xR13DR7r82iBdpATBZoKQYpGMYW'; // Votre clé API
+  final apiKeytest = dotenv.env['FREESOUND_API_KEY']!; // Votre clé API
 
   final response = await http.get(Uri.parse('https://freesound.org/apiv2/sounds/$soundId/?token=$apiKeytest'));
 

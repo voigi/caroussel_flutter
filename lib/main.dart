@@ -21,6 +21,8 @@ import 'package:caroussel/pages/privacyPolicy.dart'; // Importation nécessaire 
 
 // Importation nécessaire si Carrousel utilise File.file pour afficher les images
 
+final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -64,6 +66,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   bool _isContainerVisible =
       false; // Contrôle la visibilité du widget Carrousel
   List<String>? _imagePath; // Contient les chemins des images sélectionnées
@@ -125,12 +128,13 @@ class _MyAppState extends State<MyApp> {
 
     return MaterialApp(
       // navigatorKey: navigatorKey, // Utilise la clé de navigation globale
+      scaffoldMessengerKey: rootScaffoldMessengerKey, // Clé pour afficher les SnackBars
       home: Scaffold(
         endDrawerEnableOpenDragGesture: swipeEnabled,
         key: _scaffoldKey,
         backgroundColor: Colors.white,
         appBar: AppBar(
-          backgroundColor: Colors.cyan[700],
+          backgroundColor: const Color.from(alpha: 1, red: 0, green: 0.592, blue: 0.655),
           centerTitle: true, // L'AppBar s'occupe du centrage du titre
           titleSpacing:
               0, // Réduit l'espace entre l'icône de gauche et le titre

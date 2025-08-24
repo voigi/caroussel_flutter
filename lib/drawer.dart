@@ -115,7 +115,7 @@ class _MyDrawerState extends State<MyDrawer> {
 
     // Définir le mot-clé de recherche dans le provider
     drawerSettingsProvider.setSearchKeyword(
-        keyword.trim().isEmpty ? 'background' : keyword.trim());
+        keyword.trim().isEmpty ? 'holiday' : keyword.trim());
 
     try {
       // Récupérer les données de l'API
@@ -448,6 +448,36 @@ class _MyDrawerState extends State<MyDrawer> {
             controlAffinity: ListTileControlAffinity.trailing,
             children: <Widget>[
               Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20.0, vertical: 5.0),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange[50],
+                    border: Border.all(color: Colors.orange.shade200),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.warning_amber_rounded,
+                          color: Colors.orange),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          "Les fichiers audio importés doivent être libres de droits. "
+                          "L'application ne vérifie pas la licence des fichiers locaux.",
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.orange[800],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
                 padding: const EdgeInsets.only(
                     left: 20.0, right: 20.0, bottom: 10.0),
                 child: ListTile(
@@ -534,6 +564,9 @@ class _MyDrawerState extends State<MyDrawer> {
                     return DropdownMenuItem<String>(
                       value: item['name'],
                       child: Text(item['name']),
+                    onTap:(){
+                      drawerSettingsProvider.setSelectedMusicAuthor(item['username']);
+                      }
                     );
                   }).toList(),
                   onChanged: drawerSettingsProvider.isDropdownDisabled
@@ -648,8 +681,19 @@ class _MyDrawerState extends State<MyDrawer> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    
+              
                   ],
                 ),
+                const SizedBox(height: 4),
+                //auteur :{nom de l'auteur du son}
+                Text(
+                  'Auteur du son: ${drawerSettingsProvider.selectedMusicAuthor ?? 'Fichier Personnel'}',
+                  style: const TextStyle(fontSize: 15),
+                ),
+                 
+
+                
                 const SizedBox(height: 10),
                 _buildPlayStopButtons(isAudioSelectedForSummary),
               ],
@@ -700,49 +744,58 @@ class _MyDrawerState extends State<MyDrawer> {
 
                         // Affiche un indicateur de chargement avec coche
                         //bool isCompleted = false;
-                        
-showDialog(
-  context: stableContext,
-  barrierDismissible: false,
-  builder: (_) => Center(
-    child: Container(
-      padding: const EdgeInsets.all(24),
-      margin: const EdgeInsets.symmetric(horizontal: 40),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 10,
-            offset: Offset(0, 4), // Ombre en bas
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: const [
-          CircularProgressIndicator(color: Colors.cyan,valueColor: AlwaysStoppedAnimation<Color>(Colors.cyan),strokeWidth: 4),
-          SizedBox(height: 16),
-          Text(
-            'Création en cours...',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black,decoration: TextDecoration.none, fontFamily: 'RobotoMono'),
-            ),
-          SizedBox(height: 8),
-          Text(
-            'Veuillez patienter...',
-            style: TextStyle(fontSize: 14, color: Colors.grey,decoration: TextDecoration.none, fontFamily: 'RobotoMono'),
-          ),
-        ],
-      ),
-    ),
-  ),
-);
 
-
-                       
-
-
+                        showDialog(
+                          context: stableContext,
+                          barrierDismissible: false,
+                          builder: (_) => Center(
+                            child: Container(
+                              padding: const EdgeInsets.all(24),
+                              margin:
+                                  const EdgeInsets.symmetric(horizontal: 40),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black26,
+                                    blurRadius: 10,
+                                    offset: Offset(0, 4), // Ombre en bas
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  CircularProgressIndicator(
+                                      color: Colors.cyan,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.cyan),
+                                      strokeWidth: 4),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    'Création en cours...',
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                        decoration: TextDecoration.none,
+                                        fontFamily: 'RobotoMono'),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'Veuillez patienter...',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey,
+                                        decoration: TextDecoration.none,
+                                        fontFamily: 'RobotoMono'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
 
                         String? audioSourceForVideo;
 
@@ -802,11 +855,13 @@ showDialog(
 
                         // Gère le résultat de la génération vidéo
                         if (videoUrl.isNotEmpty) {
-                         //isCompleted = true; // Marque comme terminé
+                          //isCompleted = true; // Marque comme terminé
                           log('✅ Vidéo générée avec succès : $videoUrl');
-                          
+
                           await showVideoSavedNotification();
-                          await Future.delayed(const Duration(seconds: 2));
+                          await Future.delayed(
+                              const Duration(seconds: 7)); // Délai pour la démo
+
                           optionModal(stableContext, videoUrl,
                               videoTitle: videoTitle);
                         } else {
