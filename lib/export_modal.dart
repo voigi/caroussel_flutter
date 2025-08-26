@@ -1,77 +1,66 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; 
-import 'package:flutter/services.dart'; 
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'carousel_provider.dart';
 
-
-// Fonction pour afficher une modal qui demande si l'utilisateur veut faire une autre vidéo ou non, si non ,on remercie l'utilisateur et ferme l'application
+// --- MODAL SIMPLIFIÉE ---
+// Affiche une modale de choix claire et directe après l'enregistrement de la vidéo.
+// Conçue pour un public peu familier avec la navigation mobile, cette approche
+// évite les étapes multiples et offre des actions explicites.
 
 void ExportDialog(BuildContext context) {
+  final carouselProvider = Provider.of<CarouselProvider>(context, listen: false);
+
   showDialog(
     context: context,
+    // L'utilisateur doit faire un choix explicite, il ne peut pas fermer la modale accidentellement.
+    barrierDismissible: false,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: Center(child: Text('Vidéo Enregistrée!')),
-        content: Text('Voulez-vous créer une autre vidéo?'),
+        title: const Text('Vidéo enregistrée !', textAlign: TextAlign.center),
+        content: const Text('Que souhaitez-vous faire maintenant ?', textAlign: TextAlign.center),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        actionsAlignment: MainAxisAlignment.center,
         actions: <Widget>[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          // Utilisation d'une colonne pour que les boutons soient larges et faciles à cliquer.
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.green, // Couleur de fond bleue
-              foregroundColor: Colors.white, // Couleur du texte blanche
-            ),
-            child: Text('Oui'),
-            onPressed: () {
-              // Réinitialiser l'état de l'application pour permettre la création d'une nouvelle vidéo
-              final carouselProvider = Provider.of<CarouselProvider>(context, listen: false); carouselProvider.reset();
-              Navigator.of(context).pop(); // Fermer la modal
-            },
-          ),
-          SizedBox(width: 20), // Espacement entre les boutons
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.red, // Couleur de fond rouge
-              foregroundColor: Colors.white, // Couleur du texte blanche
-            ),
-            child: Text('Non'),
-            onPressed: () {
-              // Remercier l'utilisateur et fermer l'application
-              Navigator.of(context).pop(); // Fermer la modal
-              showDialog(
-                context: context,
-                barrierDismissible: false, // empecher de fermer la modale en cliquant en dehors
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: Center(child: Text('Merci!')),
-                    content: Text('Merci d\'avoir utilisé notre application!'),
-                    actions: <Widget>[
-                      Center(
-                        child: FilledButton(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Colors.red, // Couleur de fond rouge
-                            foregroundColor: Colors.white, // Couleur du texte blanche
-                          ),
-                          child: Text('Fermer l\'application'),
-                          onPressed: () {
-                            SystemNavigator.pop(); // Fermer l'application
-                          },
-                        ),
-                      ),
-                    ],
-                  );
+              FilledButton.icon(
+                icon: const Icon(Icons.add_circle_outline),
+                label: const Text('Créer une nouvelle vidéo'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                onPressed: () {
+                  // 1. Réinitialise l'état de l'application pour une nouvelle création.
+                  carouselProvider.reset();
+                  // 2. Ferme cette modale, ramenant l'utilisateur à l'écran de création.
+                  Navigator.of(context).pop();
                 },
-              );
-            },
-          ),
-        ],
+              ),
+              const SizedBox(height: 10),
+              FilledButton.icon(
+                icon: const Icon(Icons.exit_to_app),
+                label: const Text('Quitter'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                onPressed: () {
+                  // Ferme l'application proprement. C'est la méthode recommandée
+                  // pour un bouton de sortie explicite.
+                  SystemNavigator.pop();
+                },
+              ),
+            ],
           ),
         ],
       );
     },
   );
 }
-
-
-

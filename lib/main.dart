@@ -18,6 +18,7 @@ import 'package:caroussel/root_app.dart';
 import 'package:caroussel/guide.dart'; // Importation nécessaire pour OnBoardingPage
 import 'package:caroussel/bottomNavbar.dart'; // Importation nécessaire pour BottomNavBar
 import 'package:caroussel/pages/privacyPolicy.dart'; // Importation nécessaire pour PrivacyPolicy
+import 'package:url_launcher/url_launcher.dart'; // Ajout pour utiliser launchUrl
 
 // Importation nécessaire si Carrousel utilise File.file pour afficher les images
 
@@ -26,9 +27,7 @@ final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey = GlobalKey<Sca
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await dotenv.load(
-      fileName:
-          ".env"); // Charge les variables d'environnement depuis le fichier .env
+  await dotenv.load(fileName: ".env");
 
   // Initialisation de Firebase
   await Firebase.initializeApp(
@@ -44,17 +43,26 @@ void main() async {
     DeviceOrientation.portraitUp,
   ]);
 
-  runApp(MultiProvider(
-    providers: [
-      ChangeNotifierProvider(create: (_) => CarouselProvider()),
-      ChangeNotifierProvider(
-          create: (_) =>
-              DrawerSettingsProvider()), // Ajout du provider pour les paramètres du tiroir
-      // tu peux ajouter d'autres providers ici
-    ],
-    child: const RootApp(),
-  ));
+  // Rendre la barre de navigation transparente
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      systemNavigationBarColor: Color.fromARGB(255, 236, 230, 230), // fond transparent
+      systemNavigationBarDividerColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Brightness.dark, // icônes blanches
+    ),
+  );
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => CarouselProvider()),
+        ChangeNotifierProvider(create: (_) => DrawerSettingsProvider()),
+      ],
+      child: const RootApp(),
+    ),
+  );
 }
+
 
 class MyApp extends StatefulWidget {
   final bool showIntro;
@@ -70,9 +78,9 @@ class _MyAppState extends State<MyApp> {
   bool _isContainerVisible =
       false; // Contrôle la visibilité du widget Carrousel
   List<String>? _imagePath; // Contient les chemins des images sélectionnées
-  int? _autoScrollValue; // Valeur du défilement automatique
+  // int? _autoScrollValue; // Valeur du défilement automatique (supprimé car inutilisé)
   bool swipeEnabled = false; // Contrôle si le swipe est activé
-  bool _showScrollHint = false; // Indique si l'astuce de défilement doit être affichée
+//  bool _showScrollHint = false; // Indique si l'astuce de défilement doit être affichée
 
   void activerSwipe() {
     setState(() {
@@ -107,11 +115,11 @@ class _MyAppState extends State<MyApp> {
   }
 
   // Callback appelé par MediaUploader pour mettre à jour la valeur de défilement automatique.
-  void autoScrollValue(int autoScrollValue) {
-    setState(() {
-      _autoScrollValue = autoScrollValue;
-    });
-  }
+  // void autoScrollValue(int autoScrollValue) {
+  //   setState(() {
+  //     _autoScrollValue = autoScrollValue;
+  //   });
+  // }
 
   @override
   void initState() {
@@ -288,6 +296,29 @@ class _MyAppState extends State<MyApp> {
                 ),
               );
             }, // Callback pour ouvrir la page de politique de confidentialité
+              onContactTap: () async {
+                final String email = dotenv.env['mail'] ?? '';
+                final Uri mailtoUri = Uri(
+                  scheme: 'mailto',
+                  path: email,
+                  queryParameters: {
+                    'subject': "Question concernant l'application Mon Carrousel",
+                    'body':
+                        "Bonjour, j'ai une question au sujet de l'application Mon Carrousel :",
+                  },
+                );
+
+                if (await canLaunchUrl(mailtoUri)) {
+                  await launchUrl(mailtoUri);
+                } else {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Impossible d’ouvrir l’application mail.')),
+                    );
+                  }
+                }
+              }
           ),
         ),
       ),

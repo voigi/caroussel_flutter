@@ -70,24 +70,24 @@ Future<double> getAudioDuration(String audioPath) async {
   }
 }
 
-Future<void> archiveNewVideos(List<File> newVideos) async {
-  final moviesDir = Directory('/storage/emulated/0/Movies');
-  final archivesDir = Directory('${moviesDir.path}/Archives');
-  if (!await archivesDir.exists()) {
-    await archivesDir.create(recursive: true);
-    print('📁 Dossier Archives créé.');
-  }
-  for (final file in newVideos) {
-    final fileName = file.uri.pathSegments.last;
-    final newPath = '${archivesDir.path}/$fileName';
-    try {
-      await file.copy(newPath);
-      print('✅ Copie dans Archives : $fileName');
-    } catch (e) {
-      print('⚠️ Erreur lors de la copie de $fileName : $e');
-    }
-  }
-}
+// Future<void> archiveNewVideos(List<File> newVideos) async {
+//   final moviesDir = Directory('/storage/emulated/0/Movies');
+//   final archivesDir = Directory('${moviesDir.path}/Archives');
+//   if (!await archivesDir.exists()) {
+//     await archivesDir.create(recursive: true);
+//     print('📁 Dossier Archives créé.');
+//   }
+//   for (final file in newVideos) {
+//     final fileName = file.uri.pathSegments.last;
+//     final newPath = '${archivesDir.path}/$fileName';
+//     try {
+//       await file.copy(newPath);
+//       print('✅ Copie dans Archives : $fileName');
+//     } catch (e) {
+//       print('⚠️ Erreur lors de la copie de $fileName : $e');
+//     }
+//   }
+// }
 
 Future<String> getUniqueVideoPath(
     String baseTitle, String extension, Directory directory) async {
@@ -190,8 +190,9 @@ Future<String> convertImagesToVideo(
   log('📁 Vidéo sera enregistrée dans le stockage interne : ${outputDir.path}');
   final videoNoSoundDir = Directory('/storage/emulated/0/Movies/NoAudio');
   if (!await outputDir.exists()) await outputDir.create(recursive: true);
-  if (!await videoNoSoundDir.exists())
+  if (!await videoNoSoundDir.exists()) {
     await videoNoSoundDir.create(recursive: true);
+  }
 
   final bool hasAudio = (audioSource != null && audioSource.isNotEmpty);
   final String outputVideoPath = await getUniqueVideoPath(
@@ -272,10 +273,11 @@ Future<String> convertImagesToVideo(
 
     log('🛠️ Commande FFmpeg ajout audio : $commandWithAudio');
     await FFmpegKit.execute(commandWithAudio);
-    if (outputVideoPath.isNotEmpty)
+    if (outputVideoPath.isNotEmpty) {
       await File(tempWithAudio).copy(outputVideoPath);
+    }
     // ta fonction qui déplace les anciennes vidéos dans Archives }
-    await archiveNewVideos([File(outputVideoPath)]);
+   // await archiveNewVideos([File(outputVideoPath)]);
   }
 
   return outputVideoPath;
@@ -446,7 +448,7 @@ class _MediaUploaderState extends State<MediaUploader> {
               // La valeur est lue directement depuis le provider.
               // Utilisez null ou une valeur par défaut cohérente (0)
               // si `autoScrollValue` peut être null au démarrage.
-              value: carouselProvider.autoScrollValue ?? null,
+              value: carouselProvider.autoScrollValue,
               items: const [
                 DropdownMenuItem(value: 0, child: Text('Désactivé')),
                 DropdownMenuItem(value: 1, child: Text('Activé')),

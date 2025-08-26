@@ -29,7 +29,7 @@ Future<void> openFileExplorer() async {
   final intent = AndroidIntent(
     action: 'android.intent.action.VIEW',
     data:
-        'content://com.android.externalstorage.documents/document/primary%3AMovies%2FArchives',
+        'content://com.android.externalstorage.documents/document/primary%3AMovies%2FMes%20Vidéos',
 
     package: 'com.android.documentsui',
     flags: <int>[
@@ -58,8 +58,11 @@ Future<void> showVideoSavedNotification() async {
 
   await flutterLocalNotificationsPlugin.show(
     0,
-    '▶️ Vidéo prète',
-    'Touchez ici pour l’ouvrir',
+    //icone qui illustre que la vidéo est sauvegardée
+    
+    '💾 Vidéo sauvegardée !',
+    'Appuyez pour ouvrir le dossier',
+    
     platformChannelSpecifics,
     payload: 'openFiles',
   );

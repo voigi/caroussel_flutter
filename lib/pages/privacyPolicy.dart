@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class PrivacyPolicyPage extends StatefulWidget {
   const PrivacyPolicyPage({super.key});
@@ -31,13 +32,17 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
     final Uri uri = Uri.parse(request.url);
 
     if (uri.scheme == 'mailto') {
-      final String subject = Uri.encodeComponent(
-          "Question à propos de l'application Mon Carrousel");
-      final String body = Uri.encodeComponent(
-          "Bonjour, j'ai une question à propos de l'application Mon Carrousel :");
+      final String mail =  // mail extrait du .env
+          dotenv.env['mail'] ?? '';
 
-      final Uri mailtoUri = Uri.parse(
-          "mailto:moncarrousel.contact@gmail.com?subject=$subject&body=$body");
+      final Uri mailtoUri = Uri(
+        scheme: 'mailto',
+        path: mail,
+        queryParameters: {
+          'subject': "Question concernant l'application Mon Carrousel",
+          'body': "Bonjour, j'ai une question au sujet de l'application Mon Carrousel :",
+        },
+      );
 
       if (await canLaunchUrl(mailtoUri)) {
         await launchUrl(mailtoUri);

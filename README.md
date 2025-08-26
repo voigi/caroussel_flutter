@@ -6,6 +6,8 @@ Ce projet est une application permettant de **créer un carrousel d’images** d
 
 L'objectif est de proposer une solution clé en main pour les personnes ayant des difficultés avec les outils numériques, ou celles qui souhaitent publier rapidement du contenu sans compétences techniques avancées.
 
+**La politique de confidentialité est intégrée directement dans l'application.**
+
 ## Fonctionnalités
 
 ### 1. Ajout d’images
@@ -24,18 +26,21 @@ L’utilisateur peut **modifier ou supprimer une image** dans le carrousel via d
 L'utilisateur peut **ajouter un fond sonore** à son carrousel, soit à partir de ses fichiers personnels, soit en choisissant un son dans une bibliothèque intégrée à l’application.
 
 ### 6. Aperçu avant validation 
-Une fois la mise en forme finalisée, l’utilisateur pourra **prévisualiser** le résultat avant de confirmer le téléchargement ou le partage (par SMS ou via les réseaux sociaux).
+Une fois la mise en forme finalisée, l’utilisateur pourra **prévisualiser** le résultat avant de confirmer la génération de la vidéo.
 
 ### 7. Génération de la vidéo 
-Une fois le carrousel validé, l’application **génère une vidéo** à partir des images et du son choisis par l'utilisateur. Cette vidéo peut être partagée sur différentes plateformes.
+Une fois le carrousel validé, l’application **génère une vidéo** à partir des images et du son choisis par l'utilisateur.
 
+### 8. Exportation
+Après avoir validé le rendu dans l’aperçu, l’utilisateur peut **exporter/enregistrer la vidéo** sur son appareil (dans le dossier Mes Videos / Movies).
 
+### 9. Partage
+L’utilisateur peut partager la vidéo sur différentes plateformes (**WhatsApp, Facebook ou toute autre application présente sur son smartphone**) via la fonction de partage intégrée.
 
 ## Technologies utilisées
 
 - **Flutter** - Framework principal pour le développement mobile multiplateforme.
 - **Dart** - Langage de programmation utilisé dans le développement de l’application.
-<!-- - **X, Y, Z** (exemples) - Autres bibliothèques et outils utilisés dans le projet. -->
 
 ## Installation
 
@@ -83,7 +88,7 @@ Les contributions sont les bienvenues ! Si vous souhaitez améliorer ce projet o
 
 ## Auteurs
 
-- **Votre nom** - Développeur principal
+- **François B** - Développeur principal
 
 ## License
 

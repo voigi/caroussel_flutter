@@ -41,12 +41,14 @@ onLinkTap: (url, attributes, element) async {
     // Vérifie si c'est bien le mail de contact
     if (url.startsWith("mailto:")) {
       final String email = "moncarrousel.contact@gmail.com";
-      final String subject = Uri.encodeComponent(
-          "Question à propos de l'application Mon Carrousel");
-      final String body = Uri.encodeComponent(
-          "Bonjour, j'ai une question à propos de l'application Mon Carrousel :");
-
-      final Uri mailtoUri = Uri.parse("mailto:$email?subject=$subject&body=$body");
+      final Uri mailtoUri = Uri(
+        scheme: 'mailto',
+        path: email,
+        queryParameters: {
+          'subject': "Question concernant l'application Mon Carrousel",
+          'body': "Bonjour, j'ai une question au sujet de l'application Mon Carrousel :",
+        },
+      );
 
       if (await canLaunchUrl(mailtoUri)) {
         await launchUrl(mailtoUri);

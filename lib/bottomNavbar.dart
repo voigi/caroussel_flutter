@@ -2,34 +2,53 @@ import 'package:flutter/material.dart';
 
 class BottomNavBar extends StatelessWidget {
   final VoidCallback onPrivacyTap;
+  final VoidCallback onContactTap; // Nouveau callback
 
-  const BottomNavBar({super.key, required this.onPrivacyTap});
+  const BottomNavBar({
+    super.key,
+    required this.onPrivacyTap,
+    required this.onContactTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // La BottomAppBar s'adapte à la hauteur de son parent.
     return BottomAppBar(
       height: 50,
       color: Colors.grey[200],
-      // Le Padding crée une zone cliquable plus large et plus facile à atteindre.
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: GestureDetector(
-          behavior: HitTestBehavior.translucent, // Assure que les clics sont détectés même dans les zones transparentes
-          onTap: onPrivacyTap,
-          child: Center(
-            // Le texte est déplacé vers le haut pour être centré visuellement
-            child: Transform.translate(
-              offset: const Offset(0, -1.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly, // espace les boutons
+          children: [
+            GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: onPrivacyTap,
               child: Text(
                 "Politique de confidentialité",
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.blue,
                   decoration: TextDecoration.underline,
                 ),
               ),
             ),
-          ),
+            GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: onContactTap,
+              child: Row(
+                children: const [
+                  Icon(Icons.email_outlined, color: Colors.blue, size: 18),
+                  SizedBox(width: 4),
+                  Text(
+                    "Me contacter",
+                    style: TextStyle(
+                      color: Colors.blue,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -9,10 +9,10 @@ class OnBoardingPage extends StatefulWidget {
   final VoidCallback onSkip;
 
   const OnBoardingPage({
-    Key? key,
+    super.key,
     required this.onDone,
     required this.onSkip,
-  }) : super(key: key);
+  });
 
   @override
   State<OnBoardingPage> createState() => _OnBoardingPageState();

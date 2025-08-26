@@ -6,7 +6,7 @@ import 'package:caroussel/main.dart'; // ton MyApp principal
 
 
 class RootApp extends StatefulWidget {
-  const RootApp({Key? key}) : super(key: key);
+  const RootApp({super.key});
 
   @override
   State<RootApp> createState() => _RootAppState();
