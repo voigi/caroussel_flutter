@@ -2,7 +2,7 @@
 
 ## Description
 
-Ce projet est une application permettant de **créer un carrousel d’images** de manière simple et intuitive. L'application permet aux utilisateurs de créer des carrousels d'images et d’ajouter des fonds sonores, avec la possibilité de partager facilement leurs créations sur les réseaux sociaux ou par SMS.
+Ce projet est une application permettant de **créer un carrousel d’images** de manière simple et intuitive. L'application permet aux utilisateurs de créer des carrousels d'images et d’ajouter des fonds sonores, avec la possibilité de partager facilement leurs créations sur les réseaux sociaux .
 
 L'objectif est de proposer une solution clé en main pour les personnes ayant des difficultés avec les outils numériques, ou celles qui souhaitent publier rapidement du contenu sans compétences techniques avancées.
 
