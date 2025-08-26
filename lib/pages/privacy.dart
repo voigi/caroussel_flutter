@@ -46,7 +46,7 @@ onLinkTap: (url, attributes, element) async {
         path: email,
         queryParameters: {
           'subject': "Question concernant l'application Mon Carrousel",
-          'body': "Bonjour, j'ai une question au sujet de l'application Mon Carrousel :",
+          'body': "Bonjour,j'ai une question au sujet de l'application Mon Carrousel :",
         },
       );
 
