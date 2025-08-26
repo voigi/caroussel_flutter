@@ -304,7 +304,7 @@ class _MyAppState extends State<MyApp> {
                   queryParameters: {
                     'subject': "Question concernant l'application Mon Carrousel",
                     'body':
-                        "Bonjour, j'ai une question au sujet de l'application Mon Carrousel :",
+                        "Bonjour,j'ai une question au sujet de l'application Mon Carrousel :",
                   },
                 );
 
